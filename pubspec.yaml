@@ -3,7 +3,7 @@ description: "Open-source, end-to-end encrypted Snapchat alternative."
 
 publish_to: 'none'
 
-version: 0.7.0+214
+version: 0.8.1+225
 
 environment:
   sdk: ^3.11.0
@@ -63,7 +63,7 @@ dependencies:
   # Flutter Favorite 
   provider: ^6.1.2
   flutter_local_notifications: ^19.1.0
-  sentry_flutter: ^9.14.0
+  sentry_flutter: ^10.3.0
 
   # With high download. (But should be checked nonetheless.)
   app_links: ^7.0.0 # 1.6 mio
@@ -207,6 +207,8 @@ flutter:
     - assets/maps/countries.json.gz
     - path: assets/licenses/u2net.txt
       platforms: [android]
+    - path: assets/licenses/noto_emoji.txt
+      platforms: [android]
     - assets/icons/
     - assets/icons/verification_badge_numeric/
     - assets/animated_icons/
@@ -215,6 +217,7 @@ flutter:
     - CHANGELOG.md
 
   fonts:
+    # Scalable color emoji shared by Android text, pickers, and the editor.
     - family: NotoColorEmoji
       fonts:
-        - asset: assets/fonts/NotoColorEmoji.ttf
+        - asset: assets/fonts/Noto-COLRv1.ttf

@@ -28,6 +28,7 @@ import 'bridge/database/webxdc.dart';
 import 'bridge/groups.dart';
 import 'bridge/live_location.dart';
 import 'bridge/logging.dart';
+import 'bridge/memory_importer.dart';
 import 'bridge/performance.dart';
 import 'bridge/stories.dart';
 import 'bridge/user_config.dart';
@@ -306,6 +307,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<MemoryImportProgress>
+  dco_decode_StreamSink_memory_import_progress_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<MessageActionsWithContacts>
   dco_decode_StreamSink_message_actions_with_contacts_Sse(dynamic raw);
 
@@ -412,6 +417,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  FilterLocation dco_decode_box_autoadd_filter_location(dynamic raw);
+
+  @protected
   FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
 
   @protected
@@ -483,9 +491,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReceiptPatch dco_decode_box_autoadd_receipt_patch(dynamic raw);
-
-  @protected
-  StickerLocation dco_decode_box_autoadd_sticker_location(dynamic raw);
 
   @protected
   StoredMessage dco_decode_box_autoadd_stored_message(dynamic raw);
@@ -580,6 +585,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_f_64(dynamic raw);
 
   @protected
+  FilterLocation dco_decode_filter_location(dynamic raw);
+
+  @protected
   FirstVerificationType dco_decode_first_verification_type(dynamic raw);
 
   @protected
@@ -660,6 +668,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  ImporterInfo dco_decode_importer_info(dynamic raw);
 
   @protected
   InitConfig dco_decode_init_config(dynamic raw);
@@ -743,6 +754,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<GroupVerification> dco_decode_list_group_verification(dynamic raw);
 
   @protected
+  List<ImporterInfo> dco_decode_list_importer_info(dynamic raw);
+
+  @protected
   List<KeyVerification> dco_decode_list_key_verification(dynamic raw);
 
   @protected
@@ -773,6 +787,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<OwnStorySummary> dco_decode_list_own_story_summary(dynamic raw);
+
+  @protected
+  List<PastImportInfo> dco_decode_list_past_import_info(dynamic raw);
 
   @protected
   List<PqcPreKeyInput> dco_decode_list_pqc_pre_key_input(dynamic raw);
@@ -840,6 +857,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<UnreadableImportInfo> dco_decode_list_unreadable_import_info(
+    dynamic raw,
+  );
+
+  @protected
   List<UserDiscoveryAnnouncedUser>
   dco_decode_list_user_discovery_announced_user(dynamic raw);
 
@@ -859,6 +881,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<UserDiscoveryUserRelation> dco_decode_list_user_discovery_user_relation(
     dynamic raw,
   );
+
+  @protected
+  List<WebxdcCardApp> dco_decode_list_webxdc_card_app(dynamic raw);
 
   @protected
   List<WebxdcOneTimeInstance> dco_decode_list_webxdc_one_time_instance(
@@ -906,6 +931,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaStorageStat dco_decode_media_storage_stat(dynamic raw);
+
+  @protected
+  MemoryImportProgress dco_decode_memory_import_progress(dynamic raw);
 
   @protected
   MessageAction dco_decode_message_action(dynamic raw);
@@ -971,6 +999,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  FilterLocation? dco_decode_opt_box_autoadd_filter_location(dynamic raw);
+
+  @protected
   FrbPresignedPost? dco_decode_opt_box_autoadd_frb_presigned_post(dynamic raw);
 
   @protected
@@ -1008,9 +1039,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Receipt? dco_decode_opt_box_autoadd_receipt(dynamic raw);
-
-  @protected
-  StickerLocation? dco_decode_opt_box_autoadd_sticker_location(dynamic raw);
 
   @protected
   StoredMessage? dco_decode_opt_box_autoadd_stored_message(dynamic raw);
@@ -1066,6 +1094,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PasswordlessRecoveryConfig dco_decode_passwordless_recovery_config(
     dynamic raw,
   );
+
+  @protected
+  PastImportInfo dco_decode_past_import_info(dynamic raw);
 
   @protected
   PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
@@ -1124,6 +1155,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustKeyManager dco_decode_rust_key_manager(dynamic raw);
 
   @protected
+  RustMemoryImporter dco_decode_rust_memory_importer(dynamic raw);
+
+  @protected
   RustSignal dco_decode_rust_signal(dynamic raw);
 
   @protected
@@ -1149,9 +1183,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StickerCollection dco_decode_sticker_collection(dynamic raw);
-
-  @protected
-  StickerLocation dco_decode_sticker_location(dynamic raw);
 
   @protected
   StickerMetadata dco_decode_sticker_metadata(dynamic raw);
@@ -1206,6 +1237,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  UnreadableImportInfo dco_decode_unreadable_import_info(dynamic raw);
 
   @protected
   UserConfig dco_decode_user_config(dynamic raw);
@@ -1520,6 +1554,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<MemoryImportProgress>
+  sse_decode_StreamSink_memory_import_progress_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<MessageActionsWithContacts>
   sse_decode_StreamSink_message_actions_with_contacts_Sse(
     SseDeserializer deserializer,
@@ -1656,6 +1696,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  FilterLocation sse_decode_box_autoadd_filter_location(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbPreKeyBundle sse_decode_box_autoadd_frb_pre_key_bundle(
     SseDeserializer deserializer,
   );
@@ -1755,11 +1800,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReceiptPatch sse_decode_box_autoadd_receipt_patch(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  StickerLocation sse_decode_box_autoadd_sticker_location(
     SseDeserializer deserializer,
   );
 
@@ -1892,6 +1932,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
+  FilterLocation sse_decode_filter_location(SseDeserializer deserializer);
+
+  @protected
   FirstVerificationType sse_decode_first_verification_type(
     SseDeserializer deserializer,
   );
@@ -1988,6 +2031,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  ImporterInfo sse_decode_importer_info(SseDeserializer deserializer);
 
   @protected
   InitConfig sse_decode_init_config(SseDeserializer deserializer);
@@ -2097,6 +2143,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ImporterInfo> sse_decode_list_importer_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KeyVerification> sse_decode_list_key_verification(
     SseDeserializer deserializer,
   );
@@ -2141,6 +2192,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<OwnStorySummary> sse_decode_list_own_story_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<PastImportInfo> sse_decode_list_past_import_info(
     SseDeserializer deserializer,
   );
 
@@ -2226,6 +2282,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<UnreadableImportInfo> sse_decode_list_unreadable_import_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<UserDiscoveryAnnouncedUser>
   sse_decode_list_user_discovery_announced_user(SseDeserializer deserializer);
 
@@ -2245,6 +2306,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<UserDiscoveryUserRelation> sse_decode_list_user_discovery_user_relation(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<WebxdcCardApp> sse_decode_list_webxdc_card_app(
     SseDeserializer deserializer,
   );
 
@@ -2302,6 +2368,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaStorageStat sse_decode_media_storage_stat(SseDeserializer deserializer);
+
+  @protected
+  MemoryImportProgress sse_decode_memory_import_progress(
+    SseDeserializer deserializer,
+  );
 
   @protected
   MessageAction sse_decode_message_action(SseDeserializer deserializer);
@@ -2369,6 +2440,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  FilterLocation? sse_decode_opt_box_autoadd_filter_location(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbPresignedPost? sse_decode_opt_box_autoadd_frb_presigned_post(
     SseDeserializer deserializer,
   );
@@ -2422,11 +2498,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Receipt? sse_decode_opt_box_autoadd_receipt(SseDeserializer deserializer);
-
-  @protected
-  StickerLocation? sse_decode_opt_box_autoadd_sticker_location(
-    SseDeserializer deserializer,
-  );
 
   @protected
   StoredMessage? sse_decode_opt_box_autoadd_stored_message(
@@ -2500,6 +2571,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PastImportInfo sse_decode_past_import_info(SseDeserializer deserializer);
+
+  @protected
   PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
 
   @protected
@@ -2570,6 +2644,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer);
 
   @protected
+  RustMemoryImporter sse_decode_rust_memory_importer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustSignal sse_decode_rust_signal(SseDeserializer deserializer);
 
   @protected
@@ -2597,9 +2676,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StickerCollection sse_decode_sticker_collection(SseDeserializer deserializer);
-
-  @protected
-  StickerLocation sse_decode_sticker_location(SseDeserializer deserializer);
 
   @protected
   StickerMetadata sse_decode_sticker_metadata(SseDeserializer deserializer);
@@ -2660,6 +2736,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  UnreadableImportInfo sse_decode_unreadable_import_info(
+    SseDeserializer deserializer,
+  );
 
   @protected
   UserConfig sse_decode_user_config(SseDeserializer deserializer);
@@ -3049,6 +3130,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_memory_import_progress_Sse(
+    RustStreamSink<MemoryImportProgress> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_message_actions_with_contacts_Sse(
     RustStreamSink<MessageActionsWithContacts> self,
     SseSerializer serializer,
@@ -3211,6 +3298,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_filter_location(
+    FilterLocation self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_frb_pre_key_bundle(
     FrbPreKeyBundle self,
     SseSerializer serializer,
@@ -3345,12 +3438,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_receipt_patch(
     ReceiptPatch self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_sticker_location(
-    StickerLocation self,
     SseSerializer serializer,
   );
 
@@ -3508,6 +3595,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_filter_location(
+    FilterLocation self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_first_verification_type(
     FirstVerificationType self,
     SseSerializer serializer,
@@ -3632,6 +3725,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_importer_info(ImporterInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_init_config(InitConfig self, SseSerializer serializer);
@@ -3763,6 +3859,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_importer_info(
+    List<ImporterInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_key_verification(
     List<KeyVerification> self,
     SseSerializer serializer,
@@ -3819,6 +3921,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_own_story_summary(
     List<OwnStorySummary> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_past_import_info(
+    List<PastImportInfo> self,
     SseSerializer serializer,
   );
 
@@ -3925,6 +4033,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_unreadable_import_info(
+    List<UnreadableImportInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_user_discovery_announced_user(
     List<UserDiscoveryAnnouncedUser> self,
     SseSerializer serializer,
@@ -3951,6 +4065,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_user_discovery_user_relation(
     List<UserDiscoveryUserRelation> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_webxdc_card_app(
+    List<WebxdcCardApp> self,
     SseSerializer serializer,
   );
 
@@ -4026,6 +4146,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_media_storage_stat(
     MediaStorageStat self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_memory_import_progress(
+    MemoryImportProgress self,
     SseSerializer serializer,
   );
 
@@ -4111,6 +4237,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_filter_location(
+    FilterLocation? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_frb_presigned_post(
     FrbPresignedPost? self,
     SseSerializer serializer,
@@ -4176,12 +4308,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_receipt(
     Receipt? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_sticker_location(
-    StickerLocation? self,
     SseSerializer serializer,
   );
 
@@ -4269,6 +4395,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_passwordless_recovery_config(
     PasswordlessRecoveryConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_past_import_info(
+    PastImportInfo self,
     SseSerializer serializer,
   );
 
@@ -4369,6 +4501,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_rust_memory_importer(
+    RustMemoryImporter self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_rust_signal(RustSignal self, SseSerializer serializer);
 
   @protected
@@ -4398,12 +4536,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sticker_collection(
     StickerCollection self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_sticker_location(
-    StickerLocation self,
     SseSerializer serializer,
   );
 
@@ -4481,6 +4613,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_unreadable_import_info(
+    UnreadableImportInfo self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_user_config(UserConfig self, SseSerializer serializer);

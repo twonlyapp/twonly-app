@@ -11,7 +11,7 @@ void main() {
   for (final removeRow in [false, true]) {
     testWidgets(
       removeRow
-          ? 'dismissing a stale message menu skips its action'
+          ? 'a message menu closes together with its row'
           : 'a message menu opens the editor after dismissing the popup',
       (tester) async {
         final showRow = ValueNotifier(true);
@@ -80,10 +80,13 @@ void main() {
           showRow.value = false;
           await tester.pumpAndSettle();
           expect(find.byType(MessageContextMenu), findsNothing);
+          // The lifted menu lives in the overlay; it must not outlive the
+          // row whose contexts its actions capture.
+          expect(find.text('Edit'), findsNothing);
+        } else {
+          await tester.tap(find.text('Edit'));
+          await tester.pumpAndSettle();
         }
-
-        await tester.tap(find.text('Edit'));
-        await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
         expect(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart' show RenderCache;
 import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
@@ -162,10 +163,15 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget>
             flameCounter.toString(),
             style: const TextStyle(fontSize: 13),
           ),
+        // Rasterized: the chat list shows one of these per row, and the
+        // animations are drawn from 1024 px vectors down to this size.
         SizedBox(
           height: 15,
           child: EmojiAnimationComp.animatedIcons.containsKey(flameEmoji)
-              ? EmojiAnimationComp(emoji: flameEmoji)
+              ? EmojiAnimationComp(
+                  emoji: flameEmoji,
+                  renderCache: RenderCache.raster,
+                )
               // An icon without an animation renders as large text.
               : FittedBox(child: EmojiAnimationComp(emoji: flameEmoji)),
         ),
@@ -175,6 +181,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget>
             child: EmojiAnimationComp(
               emoji: '⌛',
               repeat: false,
+              renderCache: RenderCache.raster,
             ),
           ),
       ],

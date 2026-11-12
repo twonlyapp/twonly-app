@@ -354,7 +354,13 @@ pub async fn unopened_media(connection: &mut SqliteConnection) -> Result<Vec<Med
             FROM messages m
             JOIN media_files f
             ON f.media_id = m.media_id
-            WHERE m.opened_at IS NULL
+            -- Matches idx_messages_chat_unopened. Without it the bundled
+            -- SQLCipher planner scans every message to keep the rowid order.
+            WHERE m.message_id IN (
+                    SELECT message_id FROM messages
+                    WHERE opened_at IS NULL OR type = 'webxdcApp'
+                )
+                AND m.opened_at IS NULL
                 AND m.is_widget_media = 0
                 AND (m.is_story = 0
                     OR m.media_stored = 1
@@ -431,7 +437,7 @@ pub async fn delivery_actions(
             JOIN groups g
             ON g.group_id = m.group_id
             WHERE a.type = 'ackByUserAt'
-                OR (a.type = 'sendFailed'
+                OR (a.type IN ('sendFailed', 'sendDeferred')
                     AND g.is_direct_chat = 1
             )
             ORDER BY a.rowid

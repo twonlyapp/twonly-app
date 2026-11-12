@@ -144,9 +144,9 @@ class UserConfig {
   /// exports. Disabled by default and never added to outgoing media.
   bool storeLocationInMemories;
 
-  /// Allows an explicitly added city sticker in the media editor. Native
-  /// reverse geocoding may send coordinates to the platform provider.
-  bool enableLocationSticker;
+  /// Offers a camera filter that shows the current location on a map. The
+  /// coordinates leave the device only with media sent with that filter.
+  bool locationFilter;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
 
@@ -246,7 +246,7 @@ class UserConfig {
     this.autoDownloadOptions,
     required this.storeMediaFilesInGallery,
     required this.storeLocationInMemories,
-    required this.enableLocationSticker,
+    required this.locationFilter,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
     required this.storyNotifications,
@@ -319,7 +319,7 @@ class UserConfig {
       autoDownloadOptions.hashCode ^
       storeMediaFilesInGallery.hashCode ^
       storeLocationInMemories.hashCode ^
-      enableLocationSticker.hashCode ^
+      locationFilter.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
       storyNotifications.hashCode ^
@@ -396,7 +396,7 @@ class UserConfig {
           autoDownloadOptions == other.autoDownloadOptions &&
           storeMediaFilesInGallery == other.storeMediaFilesInGallery &&
           storeLocationInMemories == other.storeLocationInMemories &&
-          enableLocationSticker == other.enableLocationSticker &&
+          locationFilter == other.locationFilter &&
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&

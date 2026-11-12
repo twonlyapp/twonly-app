@@ -143,6 +143,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatListDetailInput => 'Nachricht eingeben';
 
   @override
+  String get chatUnavailable => 'Diese Unterhaltung ist nicht mehr verfügbar.';
+
+  @override
   String get userDeletedAccount => 'Der Nutzer hat deren Konto gelöscht.';
 
   @override
@@ -231,6 +234,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageData => 'Speicher & Downloads';
 
   @override
+  String get settingsMemories => 'Memories';
+
+  @override
+  String get settingsMemoriesSectionSaving => 'Speichern';
+
+  @override
   String get memoryDetailsTitle => 'Details';
 
   @override
@@ -256,16 +265,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aufnahmekoordinaten für Memories und Galerie-Exporte. Diese Koordinaten werden nie an Kontakte gesendet.';
 
   @override
-  String get locationStickerSettingTitle => 'Standort-Sticker';
-
-  @override
-  String get locationStickerSettingSubtitle =>
-      'Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.';
-
-  @override
-  String get locationStickerLoading => 'Dein Standort wird ermittelt…';
-
-  @override
   String get liveLocationMenu => 'Standort';
 
   @override
@@ -287,7 +286,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String liveLocationMinutes(int count) {
-    return '$count Minuten';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Minuten',
+      one: '1 Minute',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -300,6 +305,14 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String liveLocationHoursMinutes(int hours, int minutes) {
+    return '$hours Std. $minutes Min.';
+  }
+
+  @override
+  String get liveLocationCustom => 'Eigene Dauer';
 
   @override
   String get liveLocationStart => 'Teilen starten';
@@ -335,11 +348,34 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get locationFilterTitle => 'Standortfilter';
+
+  @override
+  String get locationFilterSubtitle =>
+      'Fügt einen Kamerafilter mit einer Karte deines Standorts hinzu. Dein Standort wird nur mit Medien gesendet, die du mit diesem Filter verschickst.';
+
+  @override
+  String get locationFilterSearching => 'Standort wird gesucht…';
+
+  @override
+  String get locationFilterUnavailable => 'Standort nicht gefunden';
+
+  @override
+  String photoLocationTakenAt(String time) {
+    return 'Standort um $time';
+  }
+
+  @override
   String get memoryLocationPermissionDenied =>
       'Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.';
 
   @override
-  String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';
+  String get settingsStorageDataStoreInGTitle =>
+      'Kopie in System-Galerie speichern';
+
+  @override
+  String get settingsStorageDataStoreInGSubtitle =>
+      'Gespeicherte Memories zusätzlich in der Galerie deines Geräts ablegen.';
 
   @override
   String get settingsStorageDataMediaAutoDownload =>
@@ -389,6 +425,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsPrivacyBlockUsers => 'Blockierte Kontakte';
+
+  @override
+  String get settingsPrivacyLocation => 'Standort';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -467,6 +506,48 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsNotifyPermissionDesc =>
       'Öffne die Systemeinstellungen, um Benachrichtigungen zu erlauben oder anzupassen.';
+
+  @override
+  String get settingsNotifyPollTitle =>
+      'Regelmäßig auf neue Nachrichten prüfen';
+
+  @override
+  String settingsNotifyPollSubtitle(int minutes) {
+    return 'Ohne Google-Dienste wird bei Internetverbindung etwa alle $minutes Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an.';
+  }
+
+  @override
+  String settingsNotifyPollWarning(int minutes) {
+    return 'Ohne Google-Dienste kann twonly keine sofortigen Push-Benachrichtigungen empfangen. Bei Internetverbindung wird etwa alle $minutes Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an. Wenn dein Handy im Ruhezustand ist oder Hintergrundaktivitäten einschränkt, können mehrere Stunden vergehen.';
+  }
+
+  @override
+  String get settingsNotifyPollBatteryTitle => 'Akkuoptimierung';
+
+  @override
+  String get settingsNotifyPollBatteryHelp =>
+      'Deaktiviere die Akkuoptimierung für twonly, damit zuverlässiger nach Nachrichten gesucht wird. Wähle in der Systemliste bei Bedarf „Alle Apps“, suche twonly und wähle „Nicht optimieren“. Android kann die Abfragen weiterhin verzögern.';
+
+  @override
+  String get settingsNotifyPollBatteryActive => 'Akkuoptimierung: aktiv';
+
+  @override
+  String get settingsNotifyPollBatteryDisabled =>
+      'Akkuoptimierung: deaktiviert';
+
+  @override
+  String get settingsNotifyPollRestrictedTitle =>
+      'Hintergrundaktivität eingeschränkt';
+
+  @override
+  String get settingsNotifyPollRestrictedHelp =>
+      'Android blockiert die Abfragen im Hintergrund. Öffne die App-Einstellungen von twonly und erlaube die Akkunutzung im Hintergrund.';
+
+  @override
+  String get settingsNotifyPollOpenSettings => 'Einstellungen öffnen';
+
+  @override
+  String get settingsNotifyPollLater => 'Später';
 
   @override
   String get settingsNotifyResetTitle => 'Benachrichtigungstoken zurücksetzen';
@@ -907,6 +988,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteOkBtnForAll => 'Für alle löschen';
 
   @override
+  String memoriesRemovedLocallySnackbar(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Elemente vom Gerät entfernt, weiterhin in der Cloud gesichert',
+      one: 'Vom Gerät entfernt, weiterhin in der Cloud gesichert',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String memoriesDeleteSnackbarSuccess(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1187,6 +1280,17 @@ class AppLocalizationsDe extends AppLocalizations {
       locale: localeName,
       other: '$count Tage',
       one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationAfterDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tagen',
+      one: 'einem Tag',
     );
     return '$_temp0';
   }
@@ -1578,6 +1682,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der Foto-Avatar konnte nicht erstellt werden.';
 
   @override
+  String get customAvatarSave => 'Als Avatar verwenden';
+
+  @override
   String get inProcess => 'Wird verarbeitet';
 
   @override
@@ -1799,6 +1906,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get memoriesFlashbackJumpTo => 'Anzeigen';
+
+  @override
   String migrationOfMemories(Object open) {
     return 'Migration von Mediendateien: $open noch offen.';
   }
@@ -1824,7 +1934,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String additionalUserAddErrorNotInFreePlan(Object username) {
-    return '$username hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.';
+    return '$username hat bereits einen bezahlten Plan und konnte daher nicht hinzugefügt werden.';
   }
 
   @override
@@ -1838,7 +1948,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get additionalUserRemoveDesc =>
-      'Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Tarif zurückgestuft und du kannst eine andere Person hinzufügen.';
+      'Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Plan zurückgestuft und du kannst eine andere Person hinzufügen.';
 
   @override
   String get additionalUserSelectTitle => 'Zusätzliche Benutzer auswählen';
@@ -2397,19 +2507,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String importGalleryImportingOf(Object current, Object total) {
-    return '$current von $total wird importiert...';
-  }
-
-  @override
-  String get importGalleryStarting => 'Import wird gestartet...';
-
-  @override
-  String importGalleryComplete(Object imported, Object failed) {
-    return 'Import abgeschlossen: $imported erfolgreich importiert und $failed fehlgeschlagen.';
-  }
-
-  @override
   String get importGalleryGrantAccess => 'Zugriff erlauben';
 
   @override
@@ -2442,10 +2539,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get importGalleryRefresh => 'Aktualisieren';
 
   @override
-  String get importGallerySelectToImport =>
-      'Elemente zum Importieren auswählen';
-
-  @override
   String importGalleryImportCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2457,7 +2550,44 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get emptyChatListTitle => 'Finde deinen ersten Freund';
+  String get importGalleryProgressTitle =>
+      'Deine Erinnerungen werden importiert';
+
+  @override
+  String get importGalleryProgressHint =>
+      'Lass twonly geöffnet, bis der Import abgeschlossen ist.';
+
+  @override
+  String importGalleryProgressCount(int done, int total) {
+    return '$done von $total';
+  }
+
+  @override
+  String get importGalleryStop => 'Import stoppen';
+
+  @override
+  String get importGalleryStopping => 'Wird gestoppt…';
+
+  @override
+  String get importGalleryDoneTitle => 'Import abgeschlossen';
+
+  @override
+  String get importGalleryStoppedTitle => 'Import gestoppt';
+
+  @override
+  String get importGalleryImportedLabel => 'Importiert';
+
+  @override
+  String get importGalleryFailedLabel => 'Fehlgeschlagen';
+
+  @override
+  String get importGalleryRemainingLabel => 'Verbleibend';
+
+  @override
+  String get importGalleryDone => 'Fertig';
+
+  @override
+  String get emptyChatListTitle => 'Finde deine Freunde';
 
   @override
   String get emptyChatListDesc =>
@@ -2807,10 +2937,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get memoriesBackupTitle => 'Memories Backup';
 
   @override
+  String memoriesBackupUsageOf(String max) {
+    return 'von $max';
+  }
+
+  @override
+  String memoriesBackupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Memories in der Cloud',
+      one: '1 Memory in der Cloud',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String memoriesBackupPercentUsed(String percent) {
+    return '$percent % belegt';
+  }
+
+  @override
+  String memoriesBackupUploading(int current, int total) {
+    return 'Lade $current von $total hoch';
+  }
+
+  @override
+  String get memoriesBackupDisableSubtitle =>
+      'Löscht deine gesicherten Memories aus der Cloud.';
+
+  @override
   String get settingsHelpNews => 'Neuigkeiten';
 
   @override
+  String get settingsStorageDeleteLocal => 'Nur lokal löschen';
+
+  @override
+  String get settingsStorageDeleteCompletely => 'Komplett löschen';
+
+  @override
   String get settingsStorageContents => 'Speicherplatz freigeben';
+
+  @override
+  String get settingsStorageFilterAll => 'Alle';
 
   @override
   String get settingsStorageSortStorage => 'Belegter Speicher';
@@ -2909,6 +3078,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get createContactGroup => 'Kontaktgruppe erstellen';
+
+  @override
+  String get createShortcut => 'Shortcut erstellen';
 
   @override
   String get editContactGroup => 'Kontaktgruppe anpassen';
@@ -3059,12 +3231,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileLimitReachedDetail(String size, String limit) {
-    return 'Diese Datei ist $size groß, dein Tarif erlaubt aber höchstens $limit pro Sendung.';
+    return 'Diese Datei ist $size groß, dein Plan erlaubt aber höchstens $limit pro Sendung.';
   }
 
   @override
   String fileLimitReachedDetailNoSize(String limit) {
-    return 'Dein Tarif erlaubt höchstens $limit pro Sendung.';
+    return 'Dein Plan erlaubt höchstens $limit pro Sendung.';
   }
 
   @override
@@ -3073,10 +3245,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileLimitReachedHintFree =>
-      'Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.';
+      'Nimm ein kürzeres Video auf oder wechsle den Plan, um größere Dateien zu senden.';
 
   @override
-  String get fileLimitReachedUpgrade => 'Tarif wechseln';
+  String get fileLimitReachedUpgrade => 'Plan wechseln';
 
   @override
   String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
@@ -3324,6 +3496,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stickerRotateFailed => 'Der Sticker konnte nicht gedreht werden.';
 
   @override
+  String get stickerDraftRotate => 'Drehen';
+
+  @override
+  String get stickerDraftErase => 'Radieren';
+
+  @override
+  String get stickerEraseTitle => 'Teile entfernen';
+
+  @override
+  String get stickerEraseHint => 'Male über alles, was entfernt werden soll.';
+
+  @override
+  String get stickerEraseBrushSize => 'Pinselgröße';
+
+  @override
+  String get stickerEraseApply => 'Übernehmen';
+
+  @override
+  String get stickerEraseFailed =>
+      'Die Änderungen konnten nicht übernommen werden. Ein Teil des Bildes muss übrig bleiben.';
+
+  @override
   String get releaseNotesTitle => 'Was ist neu?';
 
   @override
@@ -3412,6 +3606,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messageSendFailedUserInactive => 'Benutzer inaktiv';
+
+  @override
+  String get messageSendDeferred => 'Wird später gesendet';
+
+  @override
+  String get messageSendDeferredExplanation =>
+      'Der Server hält diese Nachricht gerade zurück, meist weil der Empfänger deine vorherigen Nachrichten noch nicht abgeholt hat. twonly sendet sie später automatisch.';
 
   @override
   String get mailboxSyncTitle => 'twonly wird synchronisiert';
@@ -3527,7 +3728,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStatusUnavailable => 'Status konnte nicht geladen werden';
 
   @override
-  String get settingsNewsShortcut => 'Neuigkeiten-Symbol anzeigen';
+  String get settingsNewsShortcut => 'News-Symbol immer ausblenden';
 
   @override
   String get settingsDownloadNone => 'Bilder & Videos nicht automatisch laden';
@@ -3698,4 +3899,181 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsChatsSectionCamera => 'Kamera';
+
+  @override
+  String get memoryImporterConnectTitle => 'Import verbinden';
+
+  @override
+  String get memoryImporterConnectBody =>
+      'Diese Browser-Sitzung kann nur neue Memories zu deinem Konto hinzufügen. Auf bestehende Uploads hat sie nie Zugriff.';
+
+  @override
+  String memoryImporterConnectWarning(String origin) {
+    return 'Verbinde nur, wenn du $origin selbst geöffnet hast. twonly bittet dich nie, einen Code für Support, eine Belohnung oder eine Verifizierung zu scannen.';
+  }
+
+  @override
+  String get memoryImporterConnect => 'Verbinden';
+
+  @override
+  String memoryImporterConnectIn(int seconds) {
+    return 'Verbinden ($seconds)';
+  }
+
+  @override
+  String get memoryImporterConnectedTitle => 'Verbunden';
+
+  @override
+  String get memoryImporterConnected =>
+      'Mach auf deinem Computer weiter: Prüfe, dass dort dein Benutzername steht, und starte dann den Upload. Deine Memories erscheinen hier, während sie hochgeladen werden.';
+
+  @override
+  String get memoryImporterConnectedDone => 'Verstanden, weiter am Computer';
+
+  @override
+  String get memoryImporterAlreadyClaimed =>
+      'Jemand anderes hat diesen Code bereits gescannt. Lade die Import-Seite neu, zeige den Code niemandem und scanne erneut.';
+
+  @override
+  String get memoryImporterCodeExpired =>
+      'Dieser Code ist abgelaufen. Lade die Import-Seite neu und scanne den neuen Code.';
+
+  @override
+  String get memoryImporterTooMany =>
+      'Es sind bereits drei Importe verbunden. Entferne einen unter Einstellungen → Memories → Aus anderen Apps importieren.';
+
+  @override
+  String get memoryImporterNeedsPlan =>
+      'Für den Import von Memories brauchst du einen Plan mit Memories-Speicher.';
+
+  @override
+  String get memoryImporterRequiresPlanTitle => 'Abo erforderlich';
+
+  @override
+  String get memoryImporterRequiresPlan =>
+      'Importierte Memories werden in deinem Memories Backup gespeichert, das in den kostenpflichtigen Plänen enthalten ist. Wechsle deinen Plan, um einen Import zu verbinden.';
+
+  @override
+  String get memoryImporterUpgrade => 'Plan wechseln';
+
+  @override
+  String get memoryImporterRequiresBackupTitle => 'Memories Backup aktivieren';
+
+  @override
+  String get memoryImporterRequiresBackup =>
+      'Importierte Memories werden in deinem Memories Backup gespeichert. Aktiviere es, um einen Import zu verbinden.';
+
+  @override
+  String get memoryImporterEnableBackup => 'Memories Backup aktivieren';
+
+  @override
+  String get memoryImporterConnectFailed =>
+      'Der Import konnte nicht verbunden werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get memoryImporterScanOnlyTitle => 'Nutze die twonly-Kamera';
+
+  @override
+  String get memoryImporterScanOnly =>
+      'Ein Memories-Import lässt sich nur verbinden, indem du seinen Code mit der twonly-Kamera scannst. Öffne twonly und scanne dann den Code auf deinem Computer. Verbinde nie einen Code, den dir jemand geschickt hat.';
+
+  @override
+  String memoryImporterHowTo(String origin) {
+    return 'Memories aus Snapchat und anderen Apps importieren: Öffne $origin auf deinem Computer und scanne den dort angezeigten Code mit der twonly-Kamera.';
+  }
+
+  @override
+  String get memoryImporterTitle => 'Memories importieren';
+
+  @override
+  String get memoryImporterFromOtherApps => 'Aus anderen Apps importieren';
+
+  @override
+  String memoryImporterOpenPage(String origin) {
+    return '$origin öffnen';
+  }
+
+  @override
+  String get memoryImporterNothingYet => 'Noch nichts hochgeladen';
+
+  @override
+  String get memoryImporterActionFailed =>
+      'Das hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get memoryImporterSectionConnected => 'Verbundene Importe';
+
+  @override
+  String get memoryImporterSectionPast => 'Abgeschlossene Importe';
+
+  @override
+  String memoryImporterUploaded(int count, String size) {
+    return '$count Memories, $size';
+  }
+
+  @override
+  String memoryImporterActiveUntil(String date) {
+    return 'Verbunden bis $date';
+  }
+
+  @override
+  String get memoryImporterRemove => 'Entfernen';
+
+  @override
+  String get memoryImporterRemoveTitle => 'Diesen Import entfernen?';
+
+  @override
+  String get memoryImporterRemoveBody =>
+      'Der Computer kann nichts mehr hochladen. Bereits erhaltene Upload-Berechtigungen bleiben bis zu 5 Minuten gültig.';
+
+  @override
+  String get memoryImporterRemoveKeep => 'Entfernen und Memories behalten';
+
+  @override
+  String get memoryImporterRemoveDelete =>
+      'Entfernen und alles Hochgeladene löschen';
+
+  @override
+  String memoryImporterPastSummary(int count, String range) {
+    return '$count Memories · $range';
+  }
+
+  @override
+  String get memoryImporterDeleteImport => 'Alles aus diesem Import löschen';
+
+  @override
+  String memoryImporterDeleteImportConfirm(int count) {
+    return '$count Memories aus diesem Import von all deinen Geräten und aus der Cloud löschen? Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String memoryImporterUnreadable(int count) {
+    return '$count importierte Elemente konnten nicht gelesen werden';
+  }
+
+  @override
+  String get memoryImporterUnreadableBody =>
+      'Sie wurden nicht zu deiner Galerie hinzugefügt, belegen aber Speicher. Lösche sie, um Platz freizugeben.';
+
+  @override
+  String get memoryImporterDelete => 'Löschen';
+
+  @override
+  String get memoryImportProgressTitle => 'Erinnerungen werden importiert';
+
+  @override
+  String memoryImportProgressCount(int done, int total) {
+    return '$done von $total';
+  }
+
+  @override
+  String memoryImportProgressAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hinzugefügt',
+      one: '1 hinzugefügt',
+    );
+    return '$_temp0';
+  }
 }

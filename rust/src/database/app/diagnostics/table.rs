@@ -2,6 +2,7 @@
 #[derive(Debug, Clone)]
 
 pub struct MockGalleryItem {
+    pub media_id: String,
     pub created_at: i64,
     pub month: String,
 }

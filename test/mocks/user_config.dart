@@ -27,7 +27,7 @@ UserConfig testUserConfig({
   startWithCameraOpen: true,
   storeMediaFilesInGallery: true,
   storeLocationInMemories: false,
-  enableLocationSticker: false,
+  locationFilter: false,
   autoStoreAllSendUnlimitedMediaFiles: false,
   typingIndicators: true,
   storyNotifications: true,

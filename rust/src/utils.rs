@@ -105,8 +105,8 @@ impl<T> Shared<T> {
 mod tests {
 
     use super::{
-        current_time, is_today, milliseconds_to_seconds, start_of_local_day,
-        start_of_local_day_at, start_of_local_day_in,
+        current_time, is_today, milliseconds_to_seconds, start_of_local_day, start_of_local_day_at,
+        start_of_local_day_in,
     };
 
     #[test]
@@ -136,7 +136,10 @@ mod tests {
 
         assert_eq!(start_of_local_day_at(today + 60), Some(today));
 
-        assert_eq!(start_of_local_day_at(today - 1), start_of_local_day_at(today - 3600));
+        assert_eq!(
+            start_of_local_day_at(today - 1),
+            start_of_local_day_at(today - 3600)
+        );
 
         assert!(start_of_local_day_at(today - 1).unwrap() < today);
 
@@ -146,7 +149,10 @@ mod tests {
     #[test]
 
     fn counts_days_ahead_in_calendar_days() {
-        assert_eq!(start_of_local_day_in(0).unwrap(), start_of_local_day().unwrap());
+        assert_eq!(
+            start_of_local_day_in(0).unwrap(),
+            start_of_local_day().unwrap()
+        );
 
         let in_five = start_of_local_day_in(5).unwrap();
 

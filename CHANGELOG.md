@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.8.1
+
+- New: 15-minute message checks on Android without Google services
+- Improve: Interactive location maps
+- Improve: Sharper emoji and easier deletion
+- Fix: Push notifications were not shown on Android 11 and older
+
+## 0.8.0
+
+- New: Import Snapchat photos and videos into Memories via import.twonly.eu
+- New: Preview stickers and photo avatars before saving, with rotate and erase tools
+- New: Location filter with a map of where you took the photo
+- Improve: Full-screen map for live locations
+- Improve: Redesigned context menu with quick reactions
+- Improve: Memories flashback viewer
+- Improve: App performance
+- Fix: App sometimes failed to start
+- Fix: Photo avatars were not shown in iOS notifications
+- Fix: Multiple smaller issues
+
 ## 0.7.0
 
 - New: On Vacation lets you freeze your flames while you are away
@@ -378,7 +398,7 @@
 ## 0.0.74
 
 - Improve: Uploading speed
-- Fix: Issue with ffmpeg for android
+- Fix: Issue with ffmpeg for Android
 
 ## 0.0.73
 

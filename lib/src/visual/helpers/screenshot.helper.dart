@@ -56,6 +56,28 @@ class ScreenshotController {
   }
   late GlobalKey _containerKey;
 
+  /// Where [key]'s widget sits in the captured area, in fractions of its
+  /// width and height, or null while either is not laid out.
+  Rect? relativeRect(GlobalKey key) {
+    final container = _containerKey.currentContext?.findRenderObject();
+    final target = key.currentContext?.findRenderObject();
+    if (container is! RenderBox ||
+        target is! RenderBox ||
+        !container.hasSize ||
+        !target.hasSize ||
+        container.size.isEmpty) {
+      return null;
+    }
+    final size = container.size;
+    final topLeft = target.localToGlobal(Offset.zero, ancestor: container);
+    return Rect.fromLTWH(
+      topLeft.dx / size.width,
+      topLeft.dy / size.height,
+      target.size.width / size.width,
+      target.size.height / size.height,
+    );
+  }
+
   Future<ScreenshotImageHelper?> capture({
     double? pixelRatio,
     int retries = 20,

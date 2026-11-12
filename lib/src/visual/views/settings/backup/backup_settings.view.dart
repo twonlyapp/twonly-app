@@ -2,18 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/core/backup/progress.dart';
 import 'package:twonly/core/bridge/wrapper/backup.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
-import 'package:twonly/src/services/memories/memories_cloud.service.dart';
-import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -22,6 +15,7 @@ import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_archive_subtitle.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_progress.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_schedule.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/memories_backup_status.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_options.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
@@ -36,13 +30,11 @@ class BackupView extends StatefulWidget {
 class _BackupViewState extends State<BackupView> {
   bool _isLoading = false;
   CurrentBackupStatus? _backupStatus;
-  FrbMemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
   StreamSubscription<BackupProgress>? _progressSub;
   BackupProgress? _progress;
   bool _isBackingUp = false;
-  bool _updatingMemories = false;
-  bool _loadingMemoriesUsage = false;
+  Key _memoriesStatusKey = UniqueKey();
 
   @override
   void initState() {
@@ -83,24 +75,6 @@ class _BackupViewState extends State<BackupView> {
       _backupStatus = status;
       _isLoading = false;
     });
-    unawaited(_loadMemoriesUsage());
-  }
-
-  Future<void> _loadMemoriesUsage() async {
-    if (_loadingMemoriesUsage) return;
-    _loadingMemoriesUsage = true;
-    FrbMemoriesUsage? memoriesUsage;
-    try {
-      memoriesUsage = await RustApi.getMemoriesUsage();
-    } catch (error, stackTrace) {
-      Log.warn('Could not load Memories usage.', error, stackTrace);
-    } finally {
-      _loadingMemoriesUsage = false;
-    }
-    if (!mounted) return;
-    setState(() {
-      _memoriesUsage = memoriesUsage;
-    });
   }
 
   Future<void> _backUpNow() async {
@@ -116,24 +90,8 @@ class _BackupViewState extends State<BackupView> {
     }
   }
 
-  Future<void> _enableMemories() async {
-    if (_updatingMemories) return;
-    setState(() => _updatingMemories = true);
-    try {
-      await UserService.update((user) => user.isCloudBackupEnabled = true);
-      unawaited(memoriesCloudService.checkUploads());
-    } catch (error, stackTrace) {
-      Log.warn('Could not update Memories backup.', error, stackTrace);
-      if (mounted) showSnackbar(context, context.lang.recoverErrorUnknown);
-    } finally {
-      if (mounted) setState(() => _updatingMemories = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isFreePlan =
-        context.watch<PurchasesProvider>().plan == SubscriptionPlan.Free;
     final lang = context.lang;
     final backupActive =
         _isBackingUp ||
@@ -243,34 +201,15 @@ class _BackupViewState extends State<BackupView> {
               ),
               BetterListTile(
                 icon: FontAwesomeIcons.photoFilm,
-                text: lang.backupCloudImagesMedia,
-                subtitle: Text(
-                  isFreePlan
-                      ? lang.backupMemoriesUpgradeRequired
-                      : !user.isCloudBackupEnabled
-                      ? lang.settingsMemoriesBackupInactive
-                      : _memoriesUsage != null
-                      ? lang.settingsMemoriesBackupActiveUsage(
-                          formatBytes(_memoriesUsage!.currentBytes),
-                          formatBytes(_memoriesUsage!.maxBytes),
-                        )
-                      : lang.settingsMemoriesBackupActive,
-                ),
+                text: lang.memoriesBackupTitle,
+                subtitle: MemoriesBackupStatusText(key: _memoriesStatusKey),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: _updatingMemories
-                    ? null
-                    : () async {
-                        if (isFreePlan) {
-                          await context.push(Routes.settingsSubscription);
-                        } else if (!user.isCloudBackupEnabled) {
-                          await _enableMemories();
-                        } else {
-                          await context.navPush(
-                            const MemoriesBackupDetailView(),
-                          );
-                        }
-                        if (mounted) await _loadBackupStatus();
-                      },
+                onTap: () async {
+                  await openMemoriesBackup(context);
+                  if (mounted) {
+                    setState(() => _memoriesStatusKey = UniqueKey());
+                  }
+                },
               ),
               if (user.isDeveloper) const BackupScheduleTile(),
             ],

@@ -43,6 +43,7 @@
   "searchUsernameNotFound": "Username not found",
   "searchUsernameNewFollowerTitle": "Open requests",
   "chatListDetailInput": "Type a message",
+  "chatUnavailable": "This conversation is no longer available.",
   "userDeletedAccount": "The user has deleted their account.",
   "contextMenuUserProfile": "User profile",
   "contextMenuArchiveUser": "Archive",
@@ -71,6 +72,8 @@
   "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "settingsProfile": "Profile",
   "settingsStorageData": "Storage & downloads",
+  "settingsMemories": "Memories",
+  "settingsMemoriesSectionSaving": "Saving",
   "memoryDetailsTitle": "Details",
   "memoryDetailsCapturedAt": "Captured",
   "memoryDetailsLocation": "Location",
@@ -79,16 +82,13 @@
   "memoryDetailsOpenMap": "Open in map",
   "memoryLocationTitle": "Store location in Memories",
   "memoryLocationSubtitle": "Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.",
-  "locationStickerSettingTitle": "Location sticker",
-  "locationStickerSettingSubtitle": "Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.",
-  "locationStickerLoading": "Finding your location…",
   "liveLocationMenu": "Location",
   "memoriesMenu": "Memories",
   "memoriesLoadFailed": "The memory could not be loaded.",
   "liveLocationTitle": "Live location",
   "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
   "liveLocationDuration": "Share for",
-  "liveLocationMinutes": "{count} minutes",
+  "liveLocationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
   "@liveLocationMinutes": {
     "placeholders": {
       "count": {
@@ -104,6 +104,18 @@
       }
     }
   },
+  "liveLocationHoursMinutes": "{hours} h {minutes} min",
+  "@liveLocationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "liveLocationCustom": "Custom",
   "liveLocationStart": "Start sharing",
   "liveLocationStop": "Stop sharing",
   "liveLocationAlreadySharing": "Your location is already being shared in this chat.",
@@ -120,8 +132,21 @@
       }
     }
   },
+  "locationFilterTitle": "Location filter",
+  "locationFilterSubtitle": "Adds a camera filter with a map of where you are. Your location is sent only with media you send using this filter.",
+  "locationFilterSearching": "Finding your location…",
+  "locationFilterUnavailable": "Location not found",
+  "photoLocationTakenAt": "Location at {time}",
+  "@photoLocationTakenAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "memoryLocationPermissionDenied": "Precise location access was not granted. The setting remains disabled.",
-  "settingsStorageDataStoreInGTitle": "Store in Gallery",
+  "settingsStorageDataStoreInGTitle": "Save copy to system gallery",
+  "settingsStorageDataStoreInGSubtitle": "Also keep saved memories in your device's gallery.",
   "settingsStorageDataMediaAutoDownload": "Media auto-download",
   "settingsStorageDataAutoDownMobile": "When using mobile data",
   "settingsStorageDataAutoDownWifi": "When using WI-FI",
@@ -138,6 +163,7 @@
   "settingsAppearance": "Design & language",
   "settingsPrivacy": "Privacy & Security",
   "settingsPrivacyBlockUsers": "Blocked contacts",
+  "settingsPrivacyLocation": "Location",
   "settingsPrivacyBlockUsersDesc": "Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.",
   "settingsPrivacyBlockUsersCount": "{len} contact(s)",
   "@settingsPrivacyBlockUsersCount": {
@@ -159,6 +185,31 @@
   "settingsNotification": "Notifications",
   "settingsNotifyPermission": "Notification permissions",
   "settingsNotifyPermissionDesc": "Open your phone’s settings to manage notification permissions.",
+  "settingsNotifyPollTitle": "Check for new messages periodically",
+  "settingsNotifyPollSubtitle": "Without Google services, check for new messages about every {minutes} minutes when connected to the internet. Messages and notifications will be delayed.",
+  "settingsNotifyPollWarning": "Without Google services, twonly cannot receive instant push notifications. It will check for new messages about every {minutes} minutes when internet is available. Messages and notifications will be delayed. When your phone is idle or limits background activity, checks can take several hours.",
+  "settingsNotifyPollBatteryTitle": "Battery optimization",
+  "settingsNotifyPollBatteryHelp": "For more reliable checks, disable battery optimization for twonly. In the system list, choose All apps if needed, find twonly, and select Don’t optimize. Android may still delay checks.",
+  "settingsNotifyPollBatteryActive": "Battery optimization: active",
+  "settingsNotifyPollBatteryDisabled": "Battery optimization: disabled",
+  "settingsNotifyPollRestrictedTitle": "Background activity is restricted",
+  "settingsNotifyPollRestrictedHelp": "Android is blocking background checks. Open twonly’s app settings and allow background battery usage.",
+  "settingsNotifyPollOpenSettings": "Open settings",
+  "settingsNotifyPollLater": "Later",
+  "@settingsNotifyPollSubtitle": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@settingsNotifyPollWarning": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
   "settingsNotifyResetTitleReset": "Notification connection renewed",
@@ -335,6 +386,7 @@
   "memoriesEmpty": "As soon as you save pictures or videos, they end up here in your memories.",
   "deleteTitle": "Are you sure?",
   "deleteOkBtnForAll": "Delete for all",
+  "memoriesRemovedLocallySnackbar": "{count, plural, =1 {Removed from this device, still backed up in the cloud} other {Removed {count} items from this device, still backed up in the cloud}}",
   "memoriesDeleteSnackbarSuccess": "{count, plural, =1 {Deleted 1 item successfully} other {Deleted {count} items successfully}}",
   "deleteOkBtnForMe": "Delete for me",
   "deleteOnlyForMe": "Delete only for me",
@@ -436,6 +488,7 @@
   "durationShortMinute": "Min.",
   "durationShortHour": "Hrs.",
   "durationShortDays": "{count, plural, =1{1 Day} other{{count} Days}}",
+  "durationAfterDays": "{count, plural, =1{1 day} other{{count} days}}",
   "contacts": "Contacts",
   "groups": "Groups",
   "newGroup": "New group",
@@ -540,6 +593,7 @@
   "customAvatarEveryone": "Everyone",
   "customAvatarChooseSource": "Choose avatar photo",
   "customAvatarCreateFailed": "The photo avatar could not be created.",
+  "customAvatarSave": "Use as avatar",
   "inProcess": "In process",
   "draftMessage": "Draft",
   "voiceMessageSlideToCancel": "Slide to cancel",
@@ -613,6 +667,7 @@
       }
     }
   },
+  "memoriesFlashbackJumpTo": "Jump to",
   "migrationOfMemories": "Migration of media files: {open} still to be processed.",
   "autoStoreAllSendUnlimitedMediaFiles": "Save all sent media",
   "autoStoreAllSendUnlimitedMediaFilesSubtitle": "If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.",
@@ -887,21 +942,6 @@
       "error": {}
     }
   },
-  "importGalleryImportingOf": "Importing {current} of {total}...",
-  "@importGalleryImportingOf": {
-    "placeholders": {
-      "current": {},
-      "total": {}
-    }
-  },
-  "importGalleryStarting": "Starting import...",
-  "importGalleryComplete": "Import complete: {imported} successfully imported and {failed} failed.",
-  "@importGalleryComplete": {
-    "placeholders": {
-      "imported": {},
-      "failed": {}
-    }
-  },
   "importGalleryGrantAccess": "Grant Access",
   "importGalleryOpenSettings": "Open Settings",
   "importGalleryPermissionDenied": "Permission to access gallery denied.",
@@ -912,7 +952,6 @@
   "importGalleryNoImagesFoundDesc": "There are no images on your device.",
   "importGalleryFilterTwonly": "Only show the twonly-Album",
   "importGalleryRefresh": "Refresh",
-  "importGallerySelectToImport": "Select items to import",
   "importGalleryImportCount": "{count, plural, =1{Import 1 item} other{Import {count} items}}",
   "@importGalleryImportCount": {
     "placeholders": {
@@ -921,7 +960,28 @@
       }
     }
   },
-  "emptyChatListTitle": "Find your first friend",
+  "importGalleryProgressTitle": "Importing your memories",
+  "importGalleryProgressHint": "Keep twonly open until the import is finished.",
+  "importGalleryProgressCount": "{done} of {total}",
+  "@importGalleryProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importGalleryStop": "Stop import",
+  "importGalleryStopping": "Stopping…",
+  "importGalleryDoneTitle": "Import complete",
+  "importGalleryStoppedTitle": "Import stopped",
+  "importGalleryImportedLabel": "Imported",
+  "importGalleryFailedLabel": "Failed",
+  "importGalleryRemainingLabel": "Remaining",
+  "importGalleryDone": "Done",
+  "emptyChatListTitle": "Find your friends",
   "emptyChatListDesc": "Let friends scan your QR code, or share them your profile.",
   "emptyChatListShareBtn": "Share your profile",
   "emptyChatListScanBtn": "QR Code",
@@ -1073,8 +1133,47 @@
   "galleryActionShare": "Share",
   "settingsStorageHidePromo": "Hide",
   "memoriesBackupTitle": "Memories Backup",
+  "memoriesBackupUsageOf": "of {max}",
+  "@memoriesBackupUsageOf": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "memoriesBackupCount": "{count, plural, =1 {1 memory in the cloud} other {{count} memories in the cloud}}",
+  "@memoriesBackupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesBackupPercentUsed": "{percent}% used",
+  "@memoriesBackupPercentUsed": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "memoriesBackupUploading": "Uploading {current} of {total}",
+  "@memoriesBackupUploading": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesBackupDisableSubtitle": "Deletes your backed up memories from the cloud.",
   "settingsHelpNews": "News",
+  "settingsStorageDeleteLocal": "Delete locally",
+  "settingsStorageDeleteCompletely": "Delete completely",
   "settingsStorageContents": "Free up space",
+  "settingsStorageFilterAll": "All",
   "settingsStorageSortStorage": "Occupied storage",
   "settingsStorageSortNewest": "Newest",
   "settingsStorageSortOldest": "Oldest",
@@ -1124,6 +1223,7 @@
   "contactGroupsTitle": "Contact Groups",
   "contactGroupsSubtitleEmpty": "No visible contact groups selected",
   "createContactGroup": "Create contact group",
+  "createShortcut": "Create shortcut",
   "editContactGroup": "Edit contact group",
   "deleteContactGroup": "Delete contact group",
   "deleteContactGroupConfirmation": "Are you sure you want to delete this contact group? It will be removed from all contacts and groups.",
@@ -1292,6 +1392,13 @@
   "deleteSticker": "Delete sticker",
   "rotateSticker": "Rotate sticker",
   "stickerRotateFailed": "The sticker could not be rotated.",
+  "stickerDraftRotate": "Rotate",
+  "stickerDraftErase": "Erase",
+  "stickerEraseTitle": "Erase parts",
+  "stickerEraseHint": "Paint over everything you want to remove.",
+  "stickerEraseBrushSize": "Brush size",
+  "stickerEraseApply": "Apply",
+  "stickerEraseFailed": "The changes could not be applied. Make sure part of the image is left.",
   "releaseNotesTitle": "What's new",
   "releaseNotesIntroduction": "The biggest twonly update yet is here. Here's a quick look at what's new.",
   "releaseNotesAlsoImproved": "Also improved",
@@ -1323,6 +1430,8 @@
   },
   "mediaSendFailed": "Send failed",
   "messageSendFailedUserInactive": "User inactive",
+  "messageSendDeferred": "Sending later",
+  "messageSendDeferredExplanation": "The server is holding this message back for now, usually because the recipient hasn't fetched your earlier messages yet. twonly sends it automatically later.",
   "mailboxSyncTitle": "Synchronizing twonly",
   "mailboxSyncBody": "twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.",
   "mailboxSyncRemaining": "{count, plural, =1{1 message left} other{{count} messages left}}",
@@ -1388,7 +1497,7 @@
   "settingsNotificationsDisabledHelp": "Allow notifications in your phone’s settings first. Tap the status above to open them.",
   "settingsStatusLoading": "Checking status…",
   "settingsStatusUnavailable": "Status could not be loaded",
-  "settingsNewsShortcut": "Show news shortcut",
+  "settingsNewsShortcut": "Always hide news icon",
   "settingsDownloadNone": "No automatic photo or video downloads",
   "settingsDeleteAccountFailed": "Your account could not be deleted. Check your internet connection and try again.",
   "settingsAccountDeleted": "Account deleted",
@@ -1458,5 +1567,136 @@
   "notificationVacationEnd": "is back from vacation.",
   "settingsChatsSectionChats": "Chats",
   "settingsChatsSectionFlames": "Flames",
-  "settingsChatsSectionCamera": "Camera"
+  "settingsChatsSectionCamera": "Camera",
+  "memoryImporterConnectTitle": "Connect importer",
+  "memoryImporterConnectBody": "This browser session can only add new memories to your account. It can never access your existing uploads.",
+  "memoryImporterConnectWarning": "Only connect if you opened {origin} yourself. twonly never asks you to scan a code for support, a reward or a verification.",
+  "@memoryImporterConnectWarning": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterConnect": "Connect",
+  "memoryImporterConnectIn": "Connect ({seconds})",
+  "@memoryImporterConnectIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterConnectedTitle": "Connected",
+  "memoryImporterConnected": "Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.",
+  "memoryImporterConnectedDone": "Got it, continue on my computer",
+  "memoryImporterAlreadyClaimed": "Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.",
+  "memoryImporterCodeExpired": "This code has expired. Reload the import page and scan the new code.",
+  "memoryImporterTooMany": "Three importers are already connected. Remove one in Settings → Memories → Import from other apps.",
+  "memoryImporterNeedsPlan": "Importing memories needs a plan with memories storage.",
+  "memoryImporterRequiresPlanTitle": "Requires a subscription",
+  "memoryImporterRequiresPlan": "Imported memories are stored in your Memories Backup, which is part of the paid plans. Upgrade to connect an importer.",
+  "memoryImporterUpgrade": "Upgrade plan",
+  "memoryImporterRequiresBackupTitle": "Turn on Memories Backup",
+  "memoryImporterRequiresBackup": "Imported memories are stored in your Memories Backup. Turn it on to connect an importer.",
+  "memoryImporterEnableBackup": "Turn on Memories Backup",
+  "memoryImporterConnectFailed": "The importer could not be connected. Check your connection and try again.",
+  "memoryImporterScanOnlyTitle": "Use the twonly camera",
+  "memoryImporterScanOnly": "A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.",
+  "memoryImporterHowTo": "Import memories from Snapchat and other apps: open {origin} on your computer and scan the code shown there with the twonly camera.",
+  "@memoryImporterHowTo": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterTitle": "Import memories",
+  "memoryImporterFromOtherApps": "Import from other apps",
+  "memoryImporterOpenPage": "Open {origin}",
+  "@memoryImporterOpenPage": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterNothingYet": "Nothing uploaded yet",
+  "memoryImporterActionFailed": "That did not work. Check your connection and try again.",
+  "memoryImporterSectionConnected": "Connected importers",
+  "memoryImporterSectionPast": "Completed imports",
+  "memoryImporterUploaded": "{count} memories, {size}",
+  "@memoryImporterUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterActiveUntil": "Connected until {date}",
+  "@memoryImporterActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterRemove": "Remove",
+  "memoryImporterRemoveTitle": "Remove this importer?",
+  "memoryImporterRemoveBody": "The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.",
+  "memoryImporterRemoveKeep": "Remove and keep its memories",
+  "memoryImporterRemoveDelete": "Remove and delete everything it uploaded",
+  "memoryImporterPastSummary": "{count} memories · {range}",
+  "@memoryImporterPastSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterDeleteImport": "Delete everything from this import",
+  "memoryImporterDeleteImportConfirm": "Delete {count} memories from this import from all your devices and the cloud? This cannot be undone.",
+  "@memoryImporterDeleteImportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterUnreadable": "{count} imported items could not be read",
+  "@memoryImporterUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterUnreadableBody": "They were not added to your gallery but still use storage. Delete them to free the space.",
+  "memoryImporterDelete": "Delete",
+  "memoryImportProgressTitle": "Importing memories",
+  "memoryImportProgressCount": "{done} of {total}",
+  "@memoryImportProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImportProgressAdded": "{count, plural, =1{1 added} other{{count} added}}",
+  "@memoryImportProgressAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -41,6 +41,8 @@ import 'package:twonly/src/visual/views/settings/help/faq/verification_badge_faq
 import 'package:twonly/src/visual/views/settings/help/help.view.dart';
 import 'package:twonly/src/visual/views/settings/help/manual_verification.view.dart';
 import 'package:twonly/src/visual/views/settings/help/news.view.dart';
+import 'package:twonly/src/visual/views/settings/memories/memory_importers.view.dart';
+import 'package:twonly/src/visual/views/settings/memories_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
@@ -263,16 +265,26 @@ final routerProvider = GoRouter(
           builder: (context, state) => const NotificationView(),
         ),
         GoRoute(
+          path: 'memories',
+          builder: (context, state) => const MemoriesSettingsView(),
+          routes: [
+            GoRoute(
+              path: 'import_gallery',
+              builder: (context, state) => const ImportFromGalleryView(),
+            ),
+            GoRoute(
+              path: 'importers',
+              builder: (context, state) => const MemoryImportersView(),
+            ),
+          ],
+        ),
+        GoRoute(
           path: 'storage_data',
           builder: (context, state) => const DataAndStorageView(),
           routes: [
             GoRoute(
               path: 'manage',
               builder: (context, state) => const ManageStorageView(),
-            ),
-            GoRoute(
-              path: 'import_gallery',
-              builder: (context, state) => const ImportFromGalleryView(),
             ),
           ],
         ),

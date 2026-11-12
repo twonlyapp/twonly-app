@@ -5,41 +5,22 @@ use rand::Rng;
 use sqlx::{Sqlite, Transaction};
 use std::path::Path;
 
+/// Stored images only: memories read `media_files`, so no chat, group or
+/// message is needed for them to show up.
 pub async fn seed_gallery(
-    tx: &mut Transaction<'_, Sqlite>, items: Vec<MockGalleryItem>, opened_at: i64,
+    tx: &mut Transaction<'_, Sqlite>, items: Vec<MockGalleryItem>,
 ) -> Result<()> {
     if items.len() > 1000 {
         return Err(TwonlyError::Generic("too many mock gallery items".into()));
     }
 
-    sqlx::query!(
-        r#"
-            INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
-            VALUES ('mock_group_gallery', 'Mock Gallery Group', 0, 1)
-            ON CONFLICT(group_id) DO UPDATE SET group_name = excluded.group_name, joined_group = 1
-        "#,
-    )
-    .execute(&mut **tx)
-    .await?;
-
-    for index in 0..12 {
-        sqlx::query!(
-            r#"
-                INSERT INTO contacts(user_id, username, display_name)
-                VALUES (?, ?, ?)
-                ON CONFLICT(user_id) DO UPDATE
-                SET username = excluded.username, display_name = excluded.display_name
-            "#,
-            9000000 + index,
-            format!("mock_user_{index}"),
-            format!("Author {index}"),
-        )
-        .execute(&mut **tx)
-        .await?;
-    }
-
-    for (index, item) in items.into_iter().enumerate() {
-        let id = format!("mock_gen_{index}");
+    for item in items {
+        // The memories backup skips `mock_gen_*`, so mock images never upload.
+        if !item.media_id.starts_with("mock_gen_") {
+            return Err(TwonlyError::Generic(
+                "mock media ids start with mock_gen_".into(),
+            ));
+        }
 
         sqlx::query!(
             r#"
@@ -49,28 +30,12 @@ pub async fn seed_gallery(
                 SET type = 'image', stored = 1,
                     created_at = excluded.created_at, created_at_month = excluded.created_at_month
             "#,
-            &id,
+            item.media_id,
             item.created_at,
             item.month,
         )
         .execute(&mut **tx)
         .await?;
-
-        sqlx::query!(
-        r#"
-            INSERT INTO messages(message_id, group_id, sender_id, type, media_id, media_stored, opened_at,
-                created_at)
-            VALUES (?, 'mock_group_gallery', ?, 'media', ?, 1, ?, ?)
-            ON CONFLICT(message_id) DO UPDATE
-            SET sender_id = excluded.sender_id, media_id = excluded.media_id,
-                media_stored = 1, opened_at = excluded.opened_at, created_at = excluded.created_at
-        "#,
-        format!("mock_msg_{index}"),
-        9000000 + (index % 12) as i64,
-        id,
-        opened_at,
-        item.created_at,
-    ).execute(&mut **tx).await?;
     }
 
     Ok(())

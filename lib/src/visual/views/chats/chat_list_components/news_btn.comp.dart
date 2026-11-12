@@ -20,6 +20,9 @@ class NewsIconButtonComp extends StatelessWidget {
         return ValueListenableBuilder<int>(
           valueListenable: newsService.unreadCountNotifier,
           builder: (context, count, child) {
+            if (count == 0) {
+              return const SizedBox.shrink();
+            }
             return NotificationBadgeComp(
               count: count.toString(),
               backgroundColor: context.color.primary,

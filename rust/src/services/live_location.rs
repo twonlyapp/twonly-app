@@ -14,7 +14,15 @@ use tokio::sync::Mutex;
 
 static SHARING: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
-pub const DURATIONS: &[i64] = &[600, 1200, 3600, 7200, 28800];
+/// Receivers refuse a card that expires more than 24 hours after its update.
+/// Released versions up to 0.7.0 still cap at eight hours, so they show a
+/// longer share as a plain text message without the map.
+pub const MAX_DURATION_SECONDS: i64 = 86_400;
+
+/// Any whole number of minutes up to the receiver limit.
+pub(crate) fn valid_duration(duration: i64) -> bool {
+    (60..=MAX_DURATION_SECONDS).contains(&duration) && duration % 60 == 0
+}
 
 /// A restored chat archive must never restart sharing on another device.
 pub(crate) async fn discard_sessions(pool: &sqlx::SqlitePool) -> Result<()> {
@@ -80,7 +88,7 @@ pub(crate) fn validate(location: &proto::LiveLocationData) -> Result<()> {
         || location.updated_at_ms <= 0
         || location.expires_at_ms <= 0
         || location.updated_at_ms > now() + 300_000
-        || location.expires_at_ms > location.updated_at_ms + 28_800_000
+        || location.expires_at_ms > location.updated_at_ms + MAX_DURATION_SECONDS * 1000
         || (!location.stopped && location.updated_at_ms > location.expires_at_ms)
     {
         return Err(invalid());
@@ -179,7 +187,7 @@ pub(crate) async fn start(
 
     group_ids.dedup();
 
-    if !DURATIONS.contains(&duration) || group_ids.is_empty() || group_ids.len() > 50 {
+    if !valid_duration(duration) || group_ids.is_empty() || group_ids.len() > 50 {
         return Err(invalid());
     }
 
@@ -740,6 +748,17 @@ pub(crate) async fn apply_pending(
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn custom_durations_are_whole_minutes_within_receiver_limit() {
+        for duration in [60, 600, 5_400, 28_800, 86_400] {
+            assert!(valid_duration(duration), "{duration}");
+        }
+
+        for duration in [0, 59, 90, 86_460, -60] {
+            assert!(!valid_duration(duration), "{duration}");
+        }
+    }
 
     async fn close_fixture(ctx: &Arc<Context>) -> anyhow::Result<()> {
         crate::api::runtime::ApiRuntime::close(ctx).await?;

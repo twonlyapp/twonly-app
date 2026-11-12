@@ -48,11 +48,14 @@ class Routes {
   static const String settingsPrivacyPublicProfile =
       '/settings/privacy/public_profile';
   static const String settingsNotification = '/settings/notification';
+  static const String settingsMemories = '/settings/memories';
+  static const String settingsMemoriesImportGallery =
+      '/settings/memories/import_gallery';
+  static const String settingsMemoriesImporters =
+      '/settings/memories/importers';
   static const String settingsStorage = '/settings/storage_data';
   static const String settingsStorageManage = '/settings/storage_data/manage';
   static const String settingsStorageImport = '/settings/storage_data/import';
-  static const String settingsStorageImportGallery =
-      '/settings/storage_data/import_gallery';
   static const String settingsStorageExport = '/settings/storage_data/export';
   static const String settingsHelp = '/settings/help';
   static const String settingsHelpFaq = '/settings/help/faq';

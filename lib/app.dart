@@ -30,6 +30,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
 import 'package:twonly/src/visual/components/mailbox_sync.comp.dart';
+import 'package:twonly/src/visual/components/memory_import_progress.comp.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/critical_error.view.dart';
@@ -162,10 +163,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           theme: getLightTheme(settings.primaryColor),
           darkTheme: getDarkTheme(settings.primaryColor),
           themeMode: settings.themeMode,
-          // Above the navigator, so a catch-up covers whichever screen is open.
+          // Above the navigator, so a catch-up covers whichever screen is open
+          // and the import bar sits above every screen.
           builder: (context, child) => Stack(
             children: [
-              ?child,
+              MemoryImportProgressBar(child: child),
               const MailboxSyncOverlay(),
             ],
           ),
@@ -198,7 +200,10 @@ class _AppMainWidgetState extends State<AppMainWidget>
   StreamSubscription<List<SharedFile>>? _intentStreamSub;
   StreamSubscription<String>? _emailTokenSub;
 
-  (Future<int>?, bool) _proofOfWork = (null, false);
+  /// Fetched and solved in the background while onboarding is shown, so a
+  /// missing connection does not hold up the first screen. Null proof means
+  /// the prefetch failed; registration then asks the server itself.
+  Future<PrefetchedProofOfWork>? _proofOfWork;
 
   @override
   void initState() {
@@ -301,12 +306,13 @@ class _AppMainWidgetState extends State<AppMainWidget>
   Future<void> _initializeRoute(int attempt) async {
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
-        final count = await rust_contacts
-            .countContacts(
-              metric: db_contacts.ContactCount.all,
-              transaction: currentDatabaseSession(),
-            )
-            .timeout(const Duration(seconds: 10));
+        final count = await _readStartupValue(
+          () => rust_contacts.countContacts(
+            metric: db_contacts.ContactCount.all,
+            transaction: currentDatabaseSession(),
+          ),
+          attempt,
+        ).timeout(const Duration(seconds: 10));
         if (!_isCurrentAttempt(attempt)) return;
         if (count == 0) {
           _initialPage = 0;
@@ -324,27 +330,18 @@ class _AppMainWidgetState extends State<AppMainWidget>
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
     } else {
-      final onboardingState = await KeyValueStore.getModel<OnboardingState>(
-        KeyValueKeys.onboardingState,
+      final onboardingState = await _readStartupValue(
+        () => KeyValueStore.getModel<OnboardingState>(
+          KeyValueKeys.onboardingState,
+        ),
+        attempt,
       ).timeout(const Duration(seconds: 10));
       if (!_isCurrentAttempt(attempt)) return;
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final proofResult = await rustApiResult(
-        RustApi.getProofOfWork(),
-      ).timeout(const Duration(seconds: 10));
-      if (!_isCurrentAttempt(attempt)) return;
-      final proof = proofResult.value;
-      final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
-      if (proof != null) {
-        Log.info('Starting with proof of work calculation.');
-        _proofOfWork = (
-          calculatePoW(proof.prefix, proof.difficulty),
-          false,
-        );
-      } else {
-        _proofOfWork = (null, disabled);
-      }
+      // Only a hint for the register screen: without a connection the user
+      // still gets onboarding, and the error shows when they try to register.
+      _proofOfWork = _prefetchProofOfWork();
 
       if (onboardingState.openBackupRecovery) {
         await KeyValueStore.update<OnboardingState>(
@@ -361,6 +358,57 @@ class _AppMainWidgetState extends State<AppMainWidget>
           if (!mounted) return;
           routerProvider.push(Routes.recoverPasswordless);
         });
+      }
+    }
+  }
+
+  static Future<PrefetchedProofOfWork> _prefetchProofOfWork() async {
+    try {
+      final proofResult = await rustApiResult(
+        RustApi.getProofOfWork(),
+      ).timeout(const Duration(seconds: 10));
+      final proof = proofResult.value;
+      if (proof == null) {
+        return (
+          proof: null,
+          registrationDisabled:
+              proofResult.error == ErrorCode.RegistrationDisabled,
+        );
+      }
+      Log.info('Starting with proof of work calculation.');
+      return (
+        proof: await calculatePoW(proof.prefix, proof.difficulty),
+        registrationDisabled: false,
+      );
+    } catch (error) {
+      Log.warn('Proof of work prefetch failed: $error');
+      return (proof: null, registrationDisabled: false);
+    }
+  }
+
+  Future<T> _readStartupValue<T>(
+    Future<T> Function() read,
+    int attempt,
+  ) async {
+    for (var retry = 0; ; retry++) {
+      try {
+        return await read();
+      } catch (error) {
+        // Another process or SQLite writer can briefly hold the startup read
+        // lock. Retry reads only, within the existing ten-second deadline.
+        if (retry >= 2 ||
+            !error.toString().contains('(code: 5) database is locked') ||
+            !_isCurrentAttempt(attempt) ||
+            _isBackground ||
+            _initializationFailed) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 200 * (retry + 1)));
+        if (!_isCurrentAttempt(attempt) ||
+            _isBackground ||
+            _initializationFailed) {
+          rethrow;
+        }
       }
     }
   }

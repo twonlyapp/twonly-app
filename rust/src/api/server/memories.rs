@@ -98,6 +98,94 @@ impl Server {
         )
     }
 
+    /// One page of confirmed memories, newest first. Pass the last item's
+    /// date and id to continue; equal dates are never skipped.
+    pub async fn get_memories_list(
+        ctx: &Arc<Context>, offset_date: i64, offset_media_id: Option<String>, limit: i64,
+    ) -> Result<ServerResult<proto::server_to_client::response::MemoriesList>> {
+        let bytes = Self::application(
+            ctx,
+            client_to_server::application_data::ApplicationData::GetMemoriesList(
+                client_to_server::application_data::GetMemoriesList {
+                    offset_date,
+                    limit,
+                    offset_media_id,
+                },
+            ),
+        )
+        .await?;
+
+        decode_ok_value(bytes, |value| match value {
+            ResponseOk::MemoriesList(list) => Some(list),
+            _ => None,
+        })
+    }
+
+    pub async fn claim_importer_pairing(
+        ctx: &Arc<Context>, pairing_id: String, envelope: Vec<u8>, import_id: String,
+        token_hash: Vec<u8>,
+    ) -> Result<ServerResult<()>> {
+        server_ok!(
+            Self::application(
+                ctx,
+                client_to_server::application_data::ApplicationData::ClaimImporterPairing(
+                    client_to_server::application_data::ClaimImporterPairing {
+                        pairing_id,
+                        envelope,
+                        import_id,
+                        token_hash,
+                    },
+                ),
+            )
+            .await?
+        )
+    }
+
+    pub async fn list_memory_importers(
+        ctx: &Arc<Context>,
+    ) -> Result<ServerResult<proto::server_to_client::response::MemoryImporters>> {
+        let bytes = Self::application(
+            ctx,
+            client_to_server::application_data::ApplicationData::ListMemoryImporters(
+                client_to_server::application_data::ListMemoryImporters {},
+            ),
+        )
+        .await?;
+
+        decode_ok_value(bytes, |value| match value {
+            ResponseOk::MemoryImporters(importers) => Some(importers),
+            _ => None,
+        })
+    }
+
+    pub async fn revoke_memory_importer(
+        ctx: &Arc<Context>, importer_id: String,
+    ) -> Result<ServerResult<()>> {
+        server_ok!(
+            Self::application(
+                ctx,
+                client_to_server::application_data::ApplicationData::RevokeMemoryImporter(
+                    client_to_server::application_data::RevokeMemoryImporter { importer_id },
+                ),
+            )
+            .await?
+        )
+    }
+
+    pub async fn delete_memory_importer_uploads(
+        ctx: &Arc<Context>, importer_id: String,
+    ) -> Result<ServerResult<()>> {
+        server_ok!(
+            Self::application(
+                ctx,
+                client_to_server::application_data::ApplicationData::DeleteMemoryImporterUploads(
+                    client_to_server::application_data::DeleteMemoryImporterUploads { importer_id },
+                ),
+            )
+            .await?
+        )
+    }
+
     pub async fn disable_memories_backup(ctx: &Arc<Context>) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application(

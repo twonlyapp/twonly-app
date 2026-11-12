@@ -34,5 +34,6 @@ class MyApplication : FlutterApplication() {
         // just as much as one the user opened.
         DirectMediaPrepare.ensurePeriodicFlush()
         eu.twonly.backup.BackupWorker.ensureScheduled(this)
+        eu.twonly.notifications.PeriodicPollScheduler.ensureScheduled(this)
     }
 }

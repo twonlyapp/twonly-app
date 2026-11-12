@@ -99,6 +99,11 @@ class _MessageInputState extends State<MessageInput>
   bool _stickerShowing = false;
   bool _switchingToSystemKeyboard = false;
   double _emojiPickerHeight = 300;
+
+  /// The picker lays out a grid of hundreds of emojis even while offstage,
+  /// which cost a long frame on every chat open. It is built the first time
+  /// it is shown and then kept, so its tab and scroll position still survive.
+  bool _emojiPickerBuilt = false;
   bool _showSparks = false;
   bool _audioRecordingLock = false;
   bool _overLockIcon = false;
@@ -168,6 +173,7 @@ class _MessageInputState extends State<MessageInput>
   @override
   void didUpdateWidget(MessageInput oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.panel == ChatInputPanel.emoji) _emojiPickerBuilt = true;
     if (widget.panel == ChatInputPanel.none) {
       _keyboardTransitionTimer?.cancel();
       _switchingToSystemKeyboard = false;
@@ -179,7 +185,6 @@ class _MessageInputState extends State<MessageInput>
     WidgetsBinding.instance.removeObserver(this);
     _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
-    widget.textFieldFocus.dispose();
     _recordingTimer?.cancel();
     _keyboardTransitionTimer?.cancel();
     _recordingBlink.dispose();
@@ -848,64 +853,65 @@ class _MessageInputState extends State<MessageInput>
             group: widget.group,
             onDismiss: () => widget.onPanelChanged(ChatInputPanel.none),
           ),
-        Offstage(
-          offstage: widget.panel != ChatInputPanel.emoji,
-          child: EmojiPicker(
-            alternateView: _stickerShowing
-                ? StickerPicker(
-                    onEmojiPressed: () {
-                      setState(() => _stickerShowing = false);
-                    },
-                    onStickerSelected: _sendSticker,
-                  )
-                : null,
-            textEditingController: _textFieldController,
-            onEmojiSelected: (category, emoji) {
-              setState(() {});
-            },
-            onBackspacePressed: () {
-              setState(() {});
-            },
-            config: Config(
-              height: _emojiPickerHeight.clamp(
-                0,
-                MediaQuery.sizeOf(context).height * 0.6,
-              ),
-              resizeConfig: ResizeConfig(
-                expandOnScroll: true,
-                // Leaves the app bar, the input and a few messages visible.
-                maxHeight: MediaQuery.sizeOf(context).height * 0.6,
-              ),
-              locale: Localizations.localeOf(context),
-              emojiTextStyle: TextStyle(
-                fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
-              ),
-              emojiViewConfig: EmojiViewConfig(
-                backgroundColor: context.color.surfaceContainer,
-                recentsLimit: 40,
-              ),
-              searchViewConfig: SearchViewConfig(
-                backgroundColor: context.color.surfaceContainer,
-                buttonIconColor: context.color.onSurface,
-              ),
-              categoryViewConfig: CategoryViewConfig(
-                backgroundColor: context.color.surfaceContainer,
-                indicatorColor: context.color.primary,
-                iconColorSelected: context.color.primary,
-                iconColor: context.color.secondary,
-              ),
-              bottomActionBarConfig: BottomActionBarConfig(
-                backgroundColor: context.color.surfaceContainer,
-                buttonColor: context.color.surfaceContainer,
-                buttonIconColor: context.color.secondary,
-                stickerButtonLabel: context.lang.sticker,
-                onStickerButtonPressed: () {
-                  setState(() => _stickerShowing = true);
-                },
+        if (_emojiPickerBuilt || widget.panel == ChatInputPanel.emoji)
+          Offstage(
+            offstage: widget.panel != ChatInputPanel.emoji,
+            child: EmojiPicker(
+              alternateView: _stickerShowing
+                  ? StickerPicker(
+                      onEmojiPressed: () {
+                        setState(() => _stickerShowing = false);
+                      },
+                      onStickerSelected: _sendSticker,
+                    )
+                  : null,
+              textEditingController: _textFieldController,
+              onEmojiSelected: (category, emoji) {
+                setState(() {});
+              },
+              onBackspacePressed: () {
+                setState(() {});
+              },
+              config: Config(
+                height: _emojiPickerHeight.clamp(
+                  0,
+                  MediaQuery.sizeOf(context).height * 0.6,
+                ),
+                resizeConfig: ResizeConfig(
+                  expandOnScroll: true,
+                  // Leaves the app bar, the input and a few messages visible.
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.6,
+                ),
+                locale: Localizations.localeOf(context),
+                emojiTextStyle: TextStyle(
+                  fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
+                ),
+                emojiViewConfig: EmojiViewConfig(
+                  backgroundColor: context.color.surfaceContainer,
+                  recentsLimit: 40,
+                ),
+                searchViewConfig: SearchViewConfig(
+                  backgroundColor: context.color.surfaceContainer,
+                  buttonIconColor: context.color.onSurface,
+                ),
+                categoryViewConfig: CategoryViewConfig(
+                  backgroundColor: context.color.surfaceContainer,
+                  indicatorColor: context.color.primary,
+                  iconColorSelected: context.color.primary,
+                  iconColor: context.color.secondary,
+                ),
+                bottomActionBarConfig: BottomActionBarConfig(
+                  backgroundColor: context.color.surfaceContainer,
+                  buttonColor: context.color.surfaceContainer,
+                  buttonIconColor: context.color.secondary,
+                  stickerButtonLabel: context.lang.sticker,
+                  onStickerButtonPressed: () {
+                    setState(() => _stickerShowing = true);
+                  },
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

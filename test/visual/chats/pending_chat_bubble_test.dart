@@ -565,6 +565,94 @@ void main() {
     },
   );
 
+  testWidgets('a missing conversation has no composer or retry error', (
+    tester,
+  ) async {
+    await runNative(
+      tester,
+      () => rust_groups.deleteGroup(
+        id: 'chat',
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    // The caller can still hold the row from the previous chat-list snapshot.
+    await openChat(tester);
+    await pumpNative(
+      tester,
+      until: () => find
+          .text(
+            'This conversation is no longer available.',
+          )
+          .evaluate()
+          .isNotEmpty,
+    );
+    expect(find.byType(MessageInput), findsNothing);
+    expect(find.text('Try again'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await flush(tester);
+  });
+
+  testWidgets(
+    'deletion under another route stays unavailable until recreated',
+    (
+      tester,
+    ) async {
+      await openChat(tester);
+      await pumpNative(
+        tester,
+        until: () => find.byType(MessageInput).evaluate().isNotEmpty,
+      );
+      final navigator = Navigator.of(tester.element(find.byType(MessageInput)))
+        ..push<void>(
+          MaterialPageRoute(
+            builder: (_) => const Scaffold(body: Text('Contact profile')),
+          ),
+        );
+      await tester.pumpAndSettle();
+      await runNative(
+        tester,
+        () => rust_groups.deleteGroup(
+          id: 'chat',
+          transaction: currentDatabaseSession(),
+        ),
+      );
+      await flush(tester);
+      expect(find.text('Contact profile'), findsOneWidget);
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(
+        find.text('This conversation is no longer available.'),
+        findsOneWidget,
+      );
+      expect(find.byType(MessageInput), findsNothing);
+      expect(find.text('Try again'), findsNothing);
+
+      await runNative(
+        tester,
+        () => rust_groups.upsertGroup(
+          patch: const GroupPatch(
+            groupId: 'chat',
+            groupName: 'Chat',
+            isDirectChat: true,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+      );
+      await pumpNative(
+        tester,
+        until: () => find.byType(MessageInput).evaluate().isNotEmpty,
+      );
+      expect(
+        find.text('This conversation is no longer available.'),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await flush(tester);
+    },
+  );
+
   for (final isSticker in [false, true]) {
     testWidgets(
       '${isSticker ? 'sticker' : 'text'} shows immediately and persists in place',

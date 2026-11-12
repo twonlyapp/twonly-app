@@ -103,12 +103,7 @@ fn a_five_day_vacation_freezes_the_streak_and_then_lets_it_run_out() {
 
 fn a_vacation_on_the_last_day_still_saves_the_streak() {
     // Exchanged on May 1, so May 3 is the day it would end at midnight.
-    let row = flame_row(
-        50,
-        noon(1),
-        Some(window(noon(3), midnight(6), "✈️")),
-        None,
-    );
+    let row = flame_row(50, noon(1), Some(window(noon(3), midnight(6), "✈️")), None);
 
     assert_eq!(shown_on(&row, 3), frozen("✈️"));
 
@@ -122,12 +117,7 @@ fn a_vacation_on_the_last_day_still_saves_the_streak() {
 #[test]
 
 fn a_vacation_cannot_bring_back_a_lost_streak() {
-    let row = flame_row(
-        50,
-        noon(1),
-        Some(window(noon(4), midnight(9), "🏕️")),
-        None,
-    );
+    let row = flame_row(50, noon(1), Some(window(noon(4), midnight(9), "🏕️")), None);
 
     for day in 4..=10 {
         assert_eq!(shown_on(&row, day), LOST, "May {day}");
@@ -229,7 +219,12 @@ fn one_vacation_carries_the_streak_into_the_next() {
     }
 
     // Starting a day later, the first vacation's streak is already gone.
-    let late = flame_row(50, noon(1), Some(own), Some(window(noon(7), midnight(10), "⛵")));
+    let late = flame_row(
+        50,
+        noon(1),
+        Some(own),
+        Some(window(noon(7), midnight(10), "⛵")),
+    );
 
     assert_eq!(shown_on(&late, 7), LOST);
 }
@@ -398,10 +393,12 @@ async fn open_database() -> (tempfile::TempDir, AppDatabase) {
         .await
         .unwrap();
 
-    sqlx::query("INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1)")
-        .execute(&database.pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1)",
+    )
+    .execute(&database.pool)
+    .await
+    .unwrap();
 
     sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7)")
         .execute(&database.pool)
@@ -615,27 +612,42 @@ async fn announcements_are_merged_by_their_start() {
 
     assert!(apply(window(start, today + 5 * DAY, "🏕️")).await);
 
-    assert_eq!(peer(&database).await, Some(window(start, today + 5 * DAY, "🏕️")));
+    assert_eq!(
+        peer(&database).await,
+        Some(window(start, today + 5 * DAY, "🏕️"))
+    );
 
     // Delivered twice: nothing changes.
     assert!(apply(window(start, today + 5 * DAY, "🏕️")).await);
 
-    assert_eq!(peer(&database).await, Some(window(start, today + 5 * DAY, "🏕️")));
+    assert_eq!(
+        peer(&database).await,
+        Some(window(start, today + 5 * DAY, "🏕️"))
+    );
 
     // Ended early.
     assert!(apply(window(start, today + DAY, "🏕️")).await);
 
-    assert_eq!(peer(&database).await, Some(window(start, today + DAY, "🏕️")));
+    assert_eq!(
+        peer(&database).await,
+        Some(window(start, today + DAY, "🏕️"))
+    );
 
     // The original announcement arriving after the end cannot undo it.
     assert!(apply(window(start, today + 5 * DAY, "🏕️")).await);
 
-    assert_eq!(peer(&database).await, Some(window(start, today + DAY, "🏕️")));
+    assert_eq!(
+        peer(&database).await,
+        Some(window(start, today + DAY, "🏕️"))
+    );
 
     // An older vacation is stale.
     assert!(!apply(window(start - DAY, today + 8 * DAY, "✈️")).await);
 
-    assert_eq!(peer(&database).await, Some(window(start, today + DAY, "🏕️")));
+    assert_eq!(
+        peer(&database).await,
+        Some(window(start, today + DAY, "🏕️"))
+    );
 
     // A newer one replaces it.
     assert!(apply(window(start + HOUR, today + 3 * DAY, "✈️")).await);
@@ -718,7 +730,11 @@ async fn a_new_vacation_keeps_what_the_previous_one_carried() {
         let after = Group::flame_state(&database.pool, "chat").await.unwrap();
 
         assert_eq!(
-            (after.counter, after.is_expiring, after.vacation_icon.as_deref()),
+            (
+                after.counter,
+                after.is_expiring,
+                after.vacation_icon.as_deref()
+            ),
             (50, false, Some("✈️")),
             "replacing the {} window",
             if replace_own { "own" } else { "peer" }
@@ -742,7 +758,10 @@ async fn the_own_vacation_is_reported_while_it_lasts() {
 
     let now = current_time().timestamp();
 
-    assert_eq!(Group::own_vacation(&database.pool, now).await.unwrap(), None);
+    assert_eq!(
+        Group::own_vacation(&database.pool, now).await.unwrap(),
+        None
+    );
 
     let vacation = window(now - HOUR, now + DAY, "⛵");
 
@@ -754,7 +773,9 @@ async fn the_own_vacation_is_reported_while_it_lasts() {
     );
 
     assert_eq!(
-        Group::own_vacation(&database.pool, now + DAY).await.unwrap(),
+        Group::own_vacation(&database.pool, now + DAY)
+            .await
+            .unwrap(),
         None
     );
 
@@ -769,7 +790,10 @@ async fn the_own_vacation_is_reported_while_it_lasts() {
 
     transaction.commit().await.unwrap();
 
-    assert_eq!(Group::own_vacation(&database.pool, now).await.unwrap(), None);
+    assert_eq!(
+        Group::own_vacation(&database.pool, now).await.unwrap(),
+        None
+    );
 }
 
 #[tokio::test]
@@ -802,7 +826,10 @@ async fn ending_a_vacation_keeps_the_days_already_spent() {
             vec![("chat".to_owned(), window(from, expected_until, "🏕️"))]
         );
 
-        assert_eq!(Group::own_vacation(&database.pool, now).await.unwrap(), None);
+        assert_eq!(
+            Group::own_vacation(&database.pool, now).await.unwrap(),
+            None
+        );
 
         // Ending again finds nothing to end.
         let mut transaction = database.pool.begin().await.unwrap();

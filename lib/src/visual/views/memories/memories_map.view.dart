@@ -666,7 +666,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                             child: MyButton(
                               variant: MyButtonVariant.primaryMiddle,
                               onPressed: () =>
-                                  context.push<void>(Routes.settingsStorage),
+                                  context.push<void>(Routes.settingsMemories),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

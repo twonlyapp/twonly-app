@@ -6,6 +6,7 @@ import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
@@ -20,12 +21,15 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
 import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
+import 'package:twonly/src/visual/views/memories/components/flashback_viewer_actions.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_actions_toolbar.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_item.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/viewer_blurred_backdrop.comp.dart';
 import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
 
 class SynchronizedImageViewerScreen extends StatefulWidget {
@@ -33,12 +37,22 @@ class SynchronizedImageViewerScreen extends StatefulWidget {
     required this.galleryItems,
     required this.initialIndex,
     required this.activeMediaIdNotifier,
+    this.flashbackLabels,
+    this.onJumpTo,
     super.key,
   });
 
   final List<MemoryItem> galleryItems;
   final int initialIndex;
   final ValueNotifier<String?> activeMediaIdNotifier;
+
+  /// "One year ago", ... per media id. When set, the viewer shows flashbacks:
+  /// the label of the current memory sits at the top and the only actions are
+  /// sharing it and jumping to it in the timeline.
+  final Map<String, String>? flashbackLabels;
+
+  /// Scrolls the timeline to the memory; the viewer closes once it completes.
+  final Future<void> Function(String mediaId)? onJumpTo;
 
   @override
   State<SynchronizedImageViewerScreen> createState() =>
@@ -60,6 +74,9 @@ class _SynchronizedImageViewerScreenState
 
   late int _currentIndex;
   bool _isZoomed = false;
+  bool _isJumping = false;
+
+  bool get _isFlashback => widget.flashbackLabels != null;
 
   @override
   void initState() {
@@ -113,20 +130,26 @@ class _SynchronizedImageViewerScreenState
     if (_isCreatingSticker) return;
     final media = widget.galleryItems[_currentIndex].mediaService;
     setState(() => _isCreatingSticker = true);
+    StickerOutput? draft;
     try {
-      await StickerService.createFromMedia(media);
-      if (!mounted) return;
-      showSnackbar(
-        context,
-        context.lang.stickerAdded,
-        level: SnackbarLevel.success,
-      );
+      draft = await StickerService.prepareFromMedia(media);
     } on Object {
-      if (!mounted) return;
-      showSnackbar(context, context.lang.stickerCreateFailed);
+      if (mounted) showSnackbar(context, context.lang.stickerCreateFailed);
     } finally {
       if (mounted) setState(() => _isCreatingSticker = false);
     }
+    if (!mounted || draft == null) return;
+    final sticker = await showStickerDraftPreview(
+      context,
+      draft,
+      onSave: StickerService.store,
+    );
+    if (!mounted || sticker == null) return;
+    showSnackbar(
+      context,
+      context.lang.stickerAdded,
+      level: SnackbarLevel.success,
+    );
   }
 
   Future<void> _toggleFavorite(String mediaId) async {
@@ -196,10 +219,20 @@ class _SynchronizedImageViewerScreenState
     }
   }
 
+  Future<void> _jumpToMemory() async {
+    final onJumpTo = widget.onJumpTo;
+    if (onJumpTo == null || _isJumping) return;
+    _isJumping = true;
+    _restoreSystemUI();
+    await onJumpTo(_currentlyViewedMediaIdNotifier.value);
+    if (mounted) Navigator.maybeOf(context)?.pop(true);
+  }
+
   Future<void> _deleteFile() async {
     final item = widget.galleryItems[_currentIndex];
+    // A pending upload is no backup yet, so local removal would lose it.
     final hasCloudBackup =
-        item.mediaService.mediaFile.cloudState != CloudState.none;
+        item.mediaService.mediaFile.cloudState == CloudState.uploaded;
 
     final deleteCompletely = await showDeleteMemoriesDialog(
       context: context,
@@ -334,6 +367,8 @@ class _SynchronizedImageViewerScreenState
       ShareImageEditorView(
         mediaFileService: newMediaService,
         sharedFromGallery: true,
+        flashbackLabel:
+            widget.flashbackLabels?[orgMediaService.mediaFile.mediaId],
       ),
     );
   }
@@ -346,6 +381,7 @@ class _SynchronizedImageViewerScreenState
 
     final orgMediaService = widget.galleryItems[_currentIndex].mediaService;
     final currentMediaId = orgMediaService.mediaFile.mediaId;
+    final blurredBackdrop = ViewerBlurredBackdropComp(media: orgMediaService);
 
     return PopScope<Object?>(
       onPopInvokedWithResult: (didPop, result) {
@@ -362,7 +398,14 @@ class _SynchronizedImageViewerScreenState
                   .withValues(
                     alpha: opacity,
                   ),
-              child: child,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Fades out with the backdrop while swiping down to close.
+                  Opacity(opacity: opacity, child: blurredBackdrop),
+                  child!,
+                ],
+              ),
             );
           },
           child: PageView(
@@ -416,22 +459,41 @@ class _SynchronizedImageViewerScreenState
                     },
                   ),
 
-                  Positioned(
-                    top: MediaQuery.paddingOf(context).top + 16,
-                    right: 16,
-                    child: AnimatedOpacity(
-                      opacity: _isZoomed ? 0 : 1,
-                      duration: const Duration(milliseconds: 200),
-                      child: IgnorePointer(
-                        ignoring: _isZoomed,
-                        child: ActionButton(
-                          Icons.info_outline,
-                          tooltipText: context.lang.memoryDetailsTitle,
-                          onPressed: _showDetails,
+                  if (_isFlashback)
+                    Positioned(
+                      top: MediaQuery.paddingOf(context).top + 16,
+                      left: 16,
+                      right: 16,
+                      child: AnimatedOpacity(
+                        opacity: _isZoomed ? 0 : 1,
+                        duration: const Duration(milliseconds: 200),
+                        child: IgnorePointer(
+                          child: Center(
+                            child: _FlashbackLabelCard(
+                              label:
+                                  widget.flashbackLabels![currentMediaId] ?? '',
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Positioned(
+                      top: MediaQuery.paddingOf(context).top + 16,
+                      right: 16,
+                      child: AnimatedOpacity(
+                        opacity: _isZoomed ? 0 : 1,
+                        duration: const Duration(milliseconds: 200),
+                        child: IgnorePointer(
+                          ignoring: _isZoomed,
+                          child: ActionButton(
+                            Icons.info_outline,
+                            tooltipText: context.lang.memoryDetailsTitle,
+                            onPressed: _showDetails,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   Positioned(
                     bottom: MediaQuery.paddingOf(context).bottom + 16,
                     left: 0,
@@ -443,26 +505,33 @@ class _SynchronizedImageViewerScreenState
                       child: IgnorePointer(
                         ignoring: _isZoomed,
                         child: Center(
-                          child: SynchronizedViewerActionsToolbarComp(
-                            isFavorite: _favoritedMediaIds.contains(
-                              currentMediaId,
-                            ),
-                            onShare: _shareMediaFile,
-                            onExport: _exportFile,
-                            onToggleFavorite: () =>
-                                _toggleFavorite(currentMediaId),
-                            showCreateStickerButton:
-                                orgMediaService.mediaFile.type ==
-                                MediaType.image,
-                            onCreateSticker: _createSticker,
-                            isCreatingSticker: _isCreatingSticker,
-                            onDelete: _deleteFile,
-                            showStoreButton: !_storedMediaIds.contains(
-                              currentMediaId,
-                            ),
-                            onStore: _storeMediaFile,
-                            isImageSaving: _isSaving,
-                          ),
+                          child: _isFlashback
+                              ? FlashbackViewerActionsComp(
+                                  onShare: _shareMediaFile,
+                                  onJumpTo: widget.onJumpTo == null
+                                      ? null
+                                      : _jumpToMemory,
+                                )
+                              : SynchronizedViewerActionsToolbarComp(
+                                  isFavorite: _favoritedMediaIds.contains(
+                                    currentMediaId,
+                                  ),
+                                  onShare: _shareMediaFile,
+                                  onExport: _exportFile,
+                                  onToggleFavorite: () =>
+                                      _toggleFavorite(currentMediaId),
+                                  showCreateStickerButton:
+                                      orgMediaService.mediaFile.type ==
+                                      MediaType.image,
+                                  onCreateSticker: _createSticker,
+                                  isCreatingSticker: _isCreatingSticker,
+                                  onDelete: _deleteFile,
+                                  showStoreButton: !_storedMediaIds.contains(
+                                    currentMediaId,
+                                  ),
+                                  onStore: _storeMediaFile,
+                                  isImageSaving: _isSaving,
+                                ),
                         ),
                       ),
                     ),
@@ -512,5 +581,37 @@ class _SynchronizedImageViewerScreenState
         }
       }
     }
+  }
+}
+
+class _FlashbackLabelCard extends StatelessWidget {
+  const _FlashbackLabelCard({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.appColor(AppColor.mediaScrim),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            label,
+            key: ValueKey(label),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.appColor(AppColor.mediaForeground),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/core/services/avatars.dart';
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -45,16 +46,18 @@ class _AvatarApi extends NativeTestApi {
   }
 
   @override
-  Future<CustomAvatarInfo> crateBridgeApiRustApiCreateCustomAvatar({
+  Future<StickerOutput> crateBridgeApiRustApiCreateSticker({
     required String imagePath,
-    required bool acceptedContactsOnly,
   }) async {
     photoInput = imagePath;
-    audience = acceptedContactsOnly;
-    return CustomAvatarInfo(
-      webp: File(imagePath).readAsBytesSync(),
-      acceptedContactsOnly: acceptedContactsOnly,
-      sourceRevision: 1,
+    final bytes = File(imagePath).readAsBytesSync();
+    final digest = sha256.convert(bytes);
+    return StickerOutput(
+      webp: bytes,
+      sha256: Uint8List.fromList(digest.bytes),
+      contentHash: digest.toString(),
+      width: 1,
+      height: 1,
     );
   }
 }
@@ -135,6 +138,13 @@ void main() {
     expect(find.text('Emoji'), findsNothing);
     await tester.tap(find.byKey(ValueKey(sha256.convert(image).toString())));
     await pumpNative(tester);
+    expect(find.byType(StickerPicker), findsNothing);
+    expect(find.byKey(const Key('stickerDraftErase')), findsOneWidget);
+    expect(api.stickerInput, isNull);
+    expect(find.text('Use as avatar'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('stickerDraftSave')));
+    await pumpNative(tester);
+    expect(find.byType(Dialog), findsNothing);
     expect(api.stickerInput, image);
     expect(api.photoInput, isNull);
     expect(api.audience, isFalse);
@@ -145,7 +155,7 @@ void main() {
   });
 
   testWidgets(
-    'photo opens shared Memories picker with Gallery and can cancel',
+    'photo opens shared Memories picker, then a preview that can cancel',
     (
       tester,
     ) async {
@@ -173,7 +183,20 @@ void main() {
       );
       await pumpNative(tester);
       expect(api.photoInput, endsWith('default_avatar.png'));
+      expect(find.byType(Dialog), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await pumpNative(tester);
       expect(api.stickerInput, isNull);
+      expect(find.widgetWithText(MyButton, 'Choose photo'), findsOneWidget);
+      await tester.tap(find.widgetWithText(MyButton, 'Choose photo'));
+      await pumpNative(tester);
+      Navigator.of(tester.element(source)).pop(
+        File('assets/images/default_avatar.png').absolute.path,
+      );
+      await pumpNative(tester);
+      await tester.tap(find.byKey(const Key('stickerDraftSave')));
+      await pumpNative(tester);
+      expect(api.stickerInput, image);
       expect(api.audience, isFalse);
       expect(find.widgetWithText(MyButton, 'Change photo'), findsOneWidget);
       expect(tester.takeException(), isNull);

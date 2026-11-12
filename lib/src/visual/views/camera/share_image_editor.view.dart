@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
@@ -61,6 +62,7 @@ class ShareImageEditorView extends StatefulWidget {
     super.key,
     this.sendToGroup,
     this.mainCameraController,
+    this.flashbackLabel,
   });
   final ScreenshotImageHelper? screenshotImage;
   final Group? sendToGroup;
@@ -68,6 +70,10 @@ class ShareImageEditorView extends StatefulWidget {
   final MediaFileService mediaFileService;
   final MainCameraController? mainCameraController;
   final PreviewLink? previewLink;
+
+  /// "One year ago", ... when a flashback memory is shared; offered as the
+  /// first filter and selected right away.
+  final String? flashbackLabel;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -142,7 +148,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
 
     if (media.type != MediaType.gif) {
-      layerStack.addFilterLayer();
+      layerStack.addFilterLayer(flashbackLabel: widget.flashbackLabel);
     }
 
     final previewLink = widget.previewLink;
@@ -422,7 +428,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future<void> _toggleRequiresAuth() async {
     await mediaService.setRequiresAuth(!media.requiresAuthentication);
-    selectedGroupIds = HashSet();
+    // A twonly can go to several chats, but never into a story.
     storyTarget.clear();
     if (mounted) setState(() {});
   }
@@ -583,9 +589,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     // ShareImageView rebuilds its own controls. Rebuilding this editor while it
     // is covered by that route needlessly redraws the full media composition.
     if (checked) {
-      if (media.requiresAuthentication) {
-        selectedGroupIds.clear();
-      }
       selectedGroupIds.add(groupId);
     } else {
       selectedGroupIds.remove(groupId);
@@ -596,10 +599,40 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaWriter.storeImageAsOriginal(pixelRatio);
 
   AdditionalMessageData? getAdditionalData() {
-    if (widget.previewLink == null) return null;
+    final link = widget.previewLink?.url.toString();
+    final location = _photoLocation();
+    if (link == null && location == null) return null;
     return AdditionalMessageData(
-      type: AdditionalMessageData_Type.LINK,
-      link: widget.previewLink!.url.toString(),
+      type: link != null
+          ? AdditionalMessageData_Type.LINK
+          : AdditionalMessageData_Type.PHOTO_LOCATION,
+      link: link,
+      photoLocation: location,
+    );
+  }
+
+  /// Coordinates leave the device only when the location filter is the
+  /// selected filter and its map is on screen.
+  PhotoLocationData? _photoLocation() {
+    final filter = layerStack.all.whereType<FilterLayerData>().firstOrNull;
+    final location = filter?.location;
+    if (filter == null || !filter.locationSelected || location == null) {
+      return null;
+    }
+    final rect = screenshotController.relativeRect(filter.locationCardKey);
+    if (rect == null) return null;
+    return PhotoLocationData(
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy: location.accuracy,
+      fixTimestampMs: Int64(location.fixTimestampMs),
+      mapLeft: rect.left,
+      mapTop: rect.top,
+      mapWidth: rect.width,
+      mapHeight: rect.height,
+      mapLatitude: filter.locationCamera?.target.latitude,
+      mapLongitude: filter.locationCamera?.target.longitude,
+      mapZoom: filter.locationCamera?.zoom,
     );
   }
 

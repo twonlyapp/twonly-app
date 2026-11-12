@@ -22,6 +22,14 @@ pub async fn webxdc_card_app(
     tx.finish(result).await
 }
 
+pub async fn webxdc_card_apps(transaction: &DatabaseSession) -> Result<Vec<WebxdcCardApp>> {
+    let mut tx = CommandTransaction::read(transaction).await?;
+
+    let result = queries::apps(tx.transaction()).await;
+
+    tx.finish(result).await
+}
+
 pub async fn webxdc_card_instance(
     id: String, transaction: &DatabaseSession,
 ) -> Result<Option<WebxdcCardInstance>> {

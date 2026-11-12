@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT attempts FROM contact_send_backoff WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "attempts",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_send_backoff",
+            "name": "attempts"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e01cca5b1ffbbe9038c015d8422fbf919694b6fa5ce09a84bbf9f6d1ec4551e3"
+}

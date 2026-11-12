@@ -7,6 +7,7 @@ Future<bool> showAlertDialog(
   String? content, {
   String? customOk,
   String? customCancel,
+  bool scrollable = false,
 }) async {
   final Widget okButton = TextButton(
     child: Text(customOk ?? context.lang.ok),
@@ -24,6 +25,7 @@ Future<bool> showAlertDialog(
 
   // set up the AlertDialog
   final alert = AlertDialog(
+    scrollable: scrollable,
     title: Text(title),
     content: (content == null) ? null : Text(content),
     actions: [

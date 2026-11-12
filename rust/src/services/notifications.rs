@@ -909,18 +909,22 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             Some(sender_name.clone())
         };
 
-        let avatar_path =
-            match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
-                Ok(path) => path.map(|path| path.display().to_string()),
-                Err(error) => {
-                    tracing::warn!(
-                        sender_id = row.sender_id,
-                        "failed to prepare notification avatar: {error}"
-                    );
+        let avatar_path = match crate::services::avatars::ensure_contact_notification_avatar_png(
+            ctx,
+            row.sender_id,
+        )
+        .await
+        {
+            Ok(path) => path.map(|path| path.display().to_string()),
+            Err(error) => {
+                tracing::warn!(
+                    sender_id = row.sender_id,
+                    "failed to prepare notification avatar: {error}"
+                );
 
-                    None
-                }
-            };
+                None
+            }
+        };
 
         let conversation_avatar_path = if is_group {
             match crate::services::avatars::ensure_group_avatar_png(
@@ -1951,13 +1955,14 @@ mod tests {
         use crate::database::app::groups::vacation::VacationWindow;
         use crate::services::groups::vacation::{vacation_data, VACATION_MESSAGE_TYPE};
 
-        let message = |r#type: &str, data: Option<Vec<u8>>| encrypted_content::AdditionalDataMessage {
-            sender_message_id: "m".into(),
-            timestamp: 1_000_000,
-            r#type: r#type.into(),
-            additional_message_data: data,
-            hidden: false,
-        };
+        let message =
+            |r#type: &str, data: Option<Vec<u8>>| encrypted_content::AdditionalDataMessage {
+                sender_message_id: "m".into(),
+                timestamp: 1_000_000,
+                r#type: r#type.into(),
+                additional_message_data: data,
+                hidden: false,
+            };
 
         let window = |until| {
             Some(vacation_data(&VacationWindow {
@@ -1990,7 +1995,10 @@ mod tests {
             None
         );
 
-        assert_eq!(vacation_kind(&message("restoreFlameCounter", window(5_000))), None);
+        assert_eq!(
+            vacation_kind(&message("restoreFlameCounter", window(5_000))),
+            None
+        );
 
         for (kind, key) in [
             ("vacation", "notificationVacation"),

@@ -8,4 +8,6 @@
     <string name="widget_open_app_first">Öffne twonly einmal, um deine Kontakte und Kontaktgruppen zu laden.</string>
     <string name="widget_save">Widget hinzufügen</string>
     <string name="widget_image_description">Neuestes Foto in deinem Widget</string>
+    <string name="notification_sync_channel">Hintergrund-Synchronisierung</string>
+    <string name="notification_sync_title">Suche nach neuen Nachrichten</string>
 </resources>

@@ -8,22 +8,25 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Month labels are formatted by Flutter in the reader's locale/time zone.
 class MockGalleryItem {
+  final String mediaId;
   final PlatformInt64 createdAt;
   final String month;
 
   const MockGalleryItem({
+    required this.mediaId,
     required this.createdAt,
     required this.month,
   });
 
   @override
-  int get hashCode => createdAt.hashCode ^ month.hashCode;
+  int get hashCode => mediaId.hashCode ^ createdAt.hashCode ^ month.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is MockGalleryItem &&
           runtimeType == other.runtimeType &&
+          mediaId == other.mediaId &&
           createdAt == other.createdAt &&
           month == other.month;
 }

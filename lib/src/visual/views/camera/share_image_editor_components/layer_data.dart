@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
@@ -54,9 +56,35 @@ class LinkPreviewLayerData extends Layer {
 class FilterLayerData extends Layer {
   FilterLayerData({
     required super.key,
-    this.page = 1,
-  });
-  int page = 1;
+    this.flashbackLabel,
+  }) : page = flashbackLabel == null ? 1 : 2;
+
+  /// Page 1 is "no filter". A shared flashback starts on its own filter,
+  /// which comes right after it.
+  int page;
+
+  /// "One year ago", ... when a flashback memory is shared.
+  final String? flashbackLabel;
+
+  /// Whether the location filter is the selected page.
+  bool locationSelected = false;
+
+  /// The location filter's fix, once it arrived.
+  FilterLocation? location;
+
+  /// Started with the editor, so the fix is usually there before the user
+  /// swipes to the location filter.
+  Future<FilterLocation?>? locationRequest;
+
+  /// The location card, to measure where the receiver draws the map.
+  final GlobalKey locationCardKey = GlobalKey();
+
+  /// The map's selected center and zoom, retained across filter changes.
+  CameraPosition? locationCamera;
+
+  /// False while the editor captures the media. The location card never ends
+  /// up in the pixels; the receiver draws the map from the sent coordinates.
+  final showLocationCard = ValueNotifier<bool>(true);
 }
 
 class EmojiLayerData extends Layer {
@@ -86,21 +114,6 @@ abstract class TransformableStickerLayerData extends Layer {
   });
 
   double size;
-}
-
-class LocationStickerLayerData extends TransformableStickerLayerData {
-  LocationStickerLayerData({
-    required super.key,
-    required this.city,
-    super.size = 220,
-    super.offset,
-    super.opacity,
-    super.rotation,
-    super.scale,
-    super.isEditing,
-  });
-
-  final String city;
 }
 
 class StickerLayerData extends TransformableStickerLayerData {

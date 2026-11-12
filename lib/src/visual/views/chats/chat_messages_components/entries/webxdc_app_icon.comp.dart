@@ -50,6 +50,22 @@ class WebxdcAppIcon extends StatelessWidget {
   }
 }
 
+/// Decodes the icons ahead of the first card, so it finds them in the image
+/// cache and paints them in its first frame instead of one or more frames later.
+void precacheWebxdcAppIcons(Iterable<WebxdcCardApp> apps) {
+  for (final app in apps) {
+    final provider = _providerFor(app);
+    if (provider == null) continue;
+    final stream = provider.resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (_, _) => stream.removeListener(listener),
+      onError: (_, _) => stream.removeListener(listener),
+    );
+    stream.addListener(listener);
+  }
+}
+
 MemoryImage? _providerFor(WebxdcCardApp? app) {
   if (app == null) return null;
   final icon = app.icon;

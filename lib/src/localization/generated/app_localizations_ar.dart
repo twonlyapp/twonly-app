@@ -148,6 +148,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatListDetailInput => 'اُكْتُبْ رِسَالَةً';
 
   @override
+  String get chatUnavailable => 'هذه المحادثة لم تعد متاحة.';
+
+  @override
   String get userDeletedAccount => 'لَقَدْ حَذَفَ المُسْتَخْدِمُ حِسَابَهُ.';
 
   @override
@@ -237,6 +240,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsStorageData => 'التخزين والتنزيلات';
 
   @override
+  String get settingsMemories => 'الذكريات';
+
+  @override
+  String get settingsMemoriesSectionSaving => 'الحفظ';
+
+  @override
   String get memoryDetailsTitle => 'التفاصيل';
 
   @override
@@ -260,16 +269,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get memoryLocationSubtitle =>
       'المَوْقِعُ لِلذِّكْرَيَاتِ وَتَصْدِيرِ الصُّوَرِ إِلَى مَعْرِضِ الصُّوَرِ. لَنْ يُرْسَلَ أَبَداً إِلَى جِهَاتِ الاِتِّصَالِ.';
-
-  @override
-  String get locationStickerSettingTitle => 'ملصق الموقع';
-
-  @override
-  String get locationStickerSettingSubtitle =>
-      'يعرض مدينتك أو بلدك، أو الإحداثيات إذا لم يتوفر اسم المكان. لا يُشارك موقعك إلا عند اختيار فلتر الموقع.';
-
-  @override
-  String get locationStickerLoading => 'جارٍ تحديد موقعك…';
 
   @override
   String get liveLocationMenu => 'الموقع';
@@ -307,6 +306,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String liveLocationHoursMinutes(int hours, int minutes) {
+    return '$hours س $minutes د';
+  }
+
+  @override
+  String get liveLocationCustom => 'مخصص';
+
+  @override
   String get liveLocationStart => 'بدء المشاركة';
 
   @override
@@ -339,12 +346,34 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get locationFilterTitle => 'فلتر الموقع';
+
+  @override
+  String get locationFilterSubtitle =>
+      'يضيف فلتر كاميرا بخريطة لموقعك. لا يُرسل موقعك إلا مع الوسائط التي ترسلها بهذا الفلتر.';
+
+  @override
+  String get locationFilterSearching => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get locationFilterUnavailable => 'تعذّر تحديد الموقع';
+
+  @override
+  String photoLocationTakenAt(String time) {
+    return 'الموقع عند $time';
+  }
+
+  @override
   String get memoryLocationPermissionDenied =>
       'لَمْ يُمْنَحِ الوُصُولُ إِلَى المَوْقِعِ الدَّقِيقِ وَيَبْقَى الإِعْدَادُ مُعَطَّلاً.';
 
   @override
   String get settingsStorageDataStoreInGTitle =>
       'الحَفْظُ فِي مَعْرِضِ الصُّوَرِ';
+
+  @override
+  String get settingsStorageDataStoreInGSubtitle =>
+      'Also keep saved memories in your device\'s gallery.';
 
   @override
   String get settingsStorageDataMediaAutoDownload =>
@@ -398,6 +427,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsPrivacyBlockUsers => 'جهات الاتصال المحظورة';
+
+  @override
+  String get settingsPrivacyLocation => 'الموقع';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -485,6 +517,45 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsNotifyPermissionDesc =>
       'افتح إعدادات هاتفك لإدارة أذونات الإشعارات.';
+
+  @override
+  String get settingsNotifyPollTitle => 'التحقق من الرسائل الجديدة دوريًا';
+
+  @override
+  String settingsNotifyPollSubtitle(int minutes) {
+    return 'بدون خدمات Google، يتم التحقق من الرسائل الجديدة كل $minutes دقيقة تقريبًا عند الاتصال بالإنترنت. ستصل الرسائل والإشعارات متأخرة.';
+  }
+
+  @override
+  String settingsNotifyPollWarning(int minutes) {
+    return 'بدون خدمات Google، لا يستطيع twonly تلقي إشعارات فورية. سيتحقق من الرسائل الجديدة كل $minutes دقيقة تقريبًا عند توفر الإنترنت. ستصل الرسائل والإشعارات متأخرة. عندما يكون هاتفك في وضع الخمول أو يقيّد النشاط في الخلفية، قد يستغرق التحقق عدة ساعات.';
+  }
+
+  @override
+  String get settingsNotifyPollBatteryTitle => 'تحسين البطارية';
+
+  @override
+  String get settingsNotifyPollBatteryHelp =>
+      'لتحقق أكثر موثوقية، عطّل تحسين البطارية لتطبيق twonly. في قائمة النظام، اختر «كل التطبيقات» عند الحاجة، ثم ابحث عن twonly واختر «عدم التحسين». قد يظل Android يؤخر التحقق.';
+
+  @override
+  String get settingsNotifyPollBatteryActive => 'تحسين البطارية: مفعّل';
+
+  @override
+  String get settingsNotifyPollBatteryDisabled => 'تحسين البطارية: معطّل';
+
+  @override
+  String get settingsNotifyPollRestrictedTitle => 'النشاط في الخلفية مقيّد';
+
+  @override
+  String get settingsNotifyPollRestrictedHelp =>
+      'يمنع Android التحقق في الخلفية. افتح إعدادات تطبيق twonly واسمح باستخدام البطارية في الخلفية.';
+
+  @override
+  String get settingsNotifyPollOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get settingsNotifyPollLater => 'لاحقًا';
 
   @override
   String get settingsNotifyResetTitle =>
@@ -938,6 +1009,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteOkBtnForAll => 'حَذْفٌ لِلْجَمِيعِ';
 
   @override
+  String memoriesRemovedLocallySnackbar(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Removed $count items from this device, still backed up in the cloud',
+      one: 'Removed from this device, still backed up in the cloud',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String memoriesDeleteSnackbarSuccess(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1226,6 +1309,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String durationShortDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يومًا',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationAfterDays(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -1621,6 +1718,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customAvatarCreateFailed => 'تعذر إنشاء الصورة الرمزية.';
 
   @override
+  String get customAvatarSave => 'استخدامها كصورة رمزية';
+
+  @override
   String get inProcess => 'قيد المعالجة';
 
   @override
@@ -1840,6 +1940,9 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get memoriesFlashbackJumpTo => 'الانتقال إليها';
 
   @override
   String migrationOfMemories(Object open) {
@@ -2434,19 +2537,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String importGalleryImportingOf(Object current, Object total) {
-    return 'جارٍ استيراد $current من $total...';
-  }
-
-  @override
-  String get importGalleryStarting => 'جارٍ بدء الاستيراد...';
-
-  @override
-  String importGalleryComplete(Object imported, Object failed) {
-    return 'اكتمل الاستيراد: نجح استيراد $imported وفشل $failed.';
-  }
-
-  @override
   String get importGalleryGrantAccess => 'منح الوصول';
 
   @override
@@ -2478,9 +2568,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get importGalleryRefresh => 'تحديث';
 
   @override
-  String get importGallerySelectToImport => 'اختر العناصر المراد استيرادها';
-
-  @override
   String importGalleryImportCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2495,7 +2582,43 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get emptyChatListTitle => 'ابحث عن صديقك الأول';
+  String get importGalleryProgressTitle => 'جارٍ استيراد ذكرياتك';
+
+  @override
+  String get importGalleryProgressHint =>
+      'أبقِ twonly مفتوحًا حتى ينتهي الاستيراد.';
+
+  @override
+  String importGalleryProgressCount(int done, int total) {
+    return '$done من $total';
+  }
+
+  @override
+  String get importGalleryStop => 'إيقاف الاستيراد';
+
+  @override
+  String get importGalleryStopping => 'جارٍ الإيقاف…';
+
+  @override
+  String get importGalleryDoneTitle => 'اكتمل الاستيراد';
+
+  @override
+  String get importGalleryStoppedTitle => 'تم إيقاف الاستيراد';
+
+  @override
+  String get importGalleryImportedLabel => 'تم الاستيراد';
+
+  @override
+  String get importGalleryFailedLabel => 'فشل';
+
+  @override
+  String get importGalleryRemainingLabel => 'متبقٍ';
+
+  @override
+  String get importGalleryDone => 'تم';
+
+  @override
+  String get emptyChatListTitle => 'ابحث عن أصدقائك';
 
   @override
   String get emptyChatListDesc =>
@@ -2842,10 +2965,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memoriesBackupTitle => 'النسخ الاحتياطي للذكريات';
 
   @override
+  String memoriesBackupUsageOf(String max) {
+    return 'من $max';
+  }
+
+  @override
+  String memoriesBackupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ذكريات في السحابة',
+      one: 'ذكرى واحدة في السحابة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String memoriesBackupPercentUsed(String percent) {
+    return '$percent٪ مستخدم';
+  }
+
+  @override
+  String memoriesBackupUploading(int current, int total) {
+    return 'جارٍ رفع $current من $total';
+  }
+
+  @override
+  String get memoriesBackupDisableSubtitle =>
+      'يحذف ذكرياتك المنسوخة احتياطيًا من السحابة.';
+
+  @override
   String get settingsHelpNews => 'الأخبار';
 
   @override
+  String get settingsStorageDeleteLocal => 'Delete locally';
+
+  @override
+  String get settingsStorageDeleteCompletely => 'Delete completely';
+
+  @override
   String get settingsStorageContents => 'إخلاء مساحة';
+
+  @override
+  String get settingsStorageFilterAll => 'All';
 
   @override
   String get settingsStorageSortStorage => 'المساحة المشغولة';
@@ -2954,6 +3116,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get createContactGroup => 'إنشاء مجموعة جهات اتصال';
+
+  @override
+  String get createShortcut => 'إنشاء اختصار';
 
   @override
   String get editContactGroup => 'تعديل مجموعة جهات الاتصال';
@@ -3372,6 +3537,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stickerRotateFailed => 'تعذّر تدوير الملصق.';
 
   @override
+  String get stickerDraftRotate => 'تدوير';
+
+  @override
+  String get stickerDraftErase => 'مسح';
+
+  @override
+  String get stickerEraseTitle => 'إزالة أجزاء';
+
+  @override
+  String get stickerEraseHint => 'مرّر إصبعك فوق كل ما تريد إزالته.';
+
+  @override
+  String get stickerEraseBrushSize => 'حجم الفرشاة';
+
+  @override
+  String get stickerEraseApply => 'تطبيق';
+
+  @override
+  String get stickerEraseFailed =>
+      'تعذر تطبيق التغييرات. تأكد من بقاء جزء من الصورة.';
+
+  @override
   String get releaseNotesTitle => 'ما الجديد؟';
 
   @override
@@ -3463,6 +3650,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get messageSendFailedUserInactive => 'المستخدم غير نشط';
+
+  @override
+  String get messageSendDeferred => 'Sending later';
+
+  @override
+  String get messageSendDeferredExplanation =>
+      'The server is holding this message back for now, usually because the recipient hasn\'t fetched your earlier messages yet. twonly sends it automatically later.';
 
   @override
   String get mailboxSyncTitle => 'جارٍ مزامنة twonly';
@@ -3579,7 +3773,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsStatusUnavailable => 'تعذر تحميل الحالة';
 
   @override
-  String get settingsNewsShortcut => 'إظهار اختصار الأخبار';
+  String get settingsNewsShortcut => 'إخفاء رمز الأخبار دائمًا';
 
   @override
   String get settingsDownloadNone => 'عدم تنزيل الصور والفيديوهات تلقائيًا';
@@ -3748,4 +3942,180 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsChatsSectionCamera => 'الكاميرا';
+
+  @override
+  String get memoryImporterConnectTitle => 'Connect importer';
+
+  @override
+  String get memoryImporterConnectBody =>
+      'This browser session can only add new memories to your account. It can never access your existing uploads.';
+
+  @override
+  String memoryImporterConnectWarning(String origin) {
+    return 'Only connect if you opened $origin yourself. twonly never asks you to scan a code for support, a reward or a verification.';
+  }
+
+  @override
+  String get memoryImporterConnect => 'Connect';
+
+  @override
+  String memoryImporterConnectIn(int seconds) {
+    return 'Connect ($seconds)';
+  }
+
+  @override
+  String get memoryImporterConnectedTitle => 'Connected';
+
+  @override
+  String get memoryImporterConnected =>
+      'Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.';
+
+  @override
+  String get memoryImporterConnectedDone => 'Got it, continue on my computer';
+
+  @override
+  String get memoryImporterAlreadyClaimed =>
+      'Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.';
+
+  @override
+  String get memoryImporterCodeExpired =>
+      'This code has expired. Reload the import page and scan the new code.';
+
+  @override
+  String get memoryImporterTooMany =>
+      'Three importers are already connected. Remove one in Settings → Memories → Import from other apps.';
+
+  @override
+  String get memoryImporterNeedsPlan =>
+      'Importing memories needs a plan with memories storage.';
+
+  @override
+  String get memoryImporterRequiresPlanTitle => 'Requires a subscription';
+
+  @override
+  String get memoryImporterRequiresPlan =>
+      'Imported memories are stored in your Memories Backup, which is part of the paid plans. Upgrade to connect an importer.';
+
+  @override
+  String get memoryImporterUpgrade => 'Upgrade plan';
+
+  @override
+  String get memoryImporterRequiresBackupTitle => 'Turn on Memories Backup';
+
+  @override
+  String get memoryImporterRequiresBackup =>
+      'Imported memories are stored in your Memories Backup. Turn it on to connect an importer.';
+
+  @override
+  String get memoryImporterEnableBackup => 'Turn on Memories Backup';
+
+  @override
+  String get memoryImporterConnectFailed =>
+      'The importer could not be connected. Check your connection and try again.';
+
+  @override
+  String get memoryImporterScanOnlyTitle => 'Use the twonly camera';
+
+  @override
+  String get memoryImporterScanOnly =>
+      'A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.';
+
+  @override
+  String memoryImporterHowTo(String origin) {
+    return 'Import memories from Snapchat and other apps: open $origin on your computer and scan the code shown there with the twonly camera.';
+  }
+
+  @override
+  String get memoryImporterTitle => 'Import memories';
+
+  @override
+  String get memoryImporterFromOtherApps => 'الاستيراد من تطبيقات أخرى';
+
+  @override
+  String memoryImporterOpenPage(String origin) {
+    return 'فتح $origin';
+  }
+
+  @override
+  String get memoryImporterNothingYet => 'Nothing uploaded yet';
+
+  @override
+  String get memoryImporterActionFailed =>
+      'That did not work. Check your connection and try again.';
+
+  @override
+  String get memoryImporterSectionConnected => 'Connected importers';
+
+  @override
+  String get memoryImporterSectionPast => 'Completed imports';
+
+  @override
+  String memoryImporterUploaded(int count, String size) {
+    return '$count memories, $size';
+  }
+
+  @override
+  String memoryImporterActiveUntil(String date) {
+    return 'Connected until $date';
+  }
+
+  @override
+  String get memoryImporterRemove => 'Remove';
+
+  @override
+  String get memoryImporterRemoveTitle => 'Remove this importer?';
+
+  @override
+  String get memoryImporterRemoveBody =>
+      'The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.';
+
+  @override
+  String get memoryImporterRemoveKeep => 'Remove and keep its memories';
+
+  @override
+  String get memoryImporterRemoveDelete =>
+      'Remove and delete everything it uploaded';
+
+  @override
+  String memoryImporterPastSummary(int count, String range) {
+    return '$count memories · $range';
+  }
+
+  @override
+  String get memoryImporterDeleteImport => 'Delete everything from this import';
+
+  @override
+  String memoryImporterDeleteImportConfirm(int count) {
+    return 'Delete $count memories from this import from all your devices and the cloud? This cannot be undone.';
+  }
+
+  @override
+  String memoryImporterUnreadable(int count) {
+    return '$count imported items could not be read';
+  }
+
+  @override
+  String get memoryImporterUnreadableBody =>
+      'They were not added to your gallery but still use storage. Delete them to free the space.';
+
+  @override
+  String get memoryImporterDelete => 'Delete';
+
+  @override
+  String get memoryImportProgressTitle => 'جارٍ استيراد الذكريات';
+
+  @override
+  String memoryImportProgressCount(int done, int total) {
+    return '$done من $total';
+  }
+
+  @override
+  String memoryImportProgressAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تمت إضافة $count',
+    );
+    return '$_temp0';
+  }
 }

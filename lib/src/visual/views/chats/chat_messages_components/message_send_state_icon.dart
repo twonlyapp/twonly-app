@@ -116,6 +116,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         context,
         sharedActions.failedMessageIds,
         sharedActions.ackedMessageIds,
+        sharedActions.deferredMessageIds,
       );
     }
     final pendingIds = widget.messages
@@ -129,7 +130,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         .map((m) => m.messageId)
         .toSet();
     if (pendingIds.isEmpty || widget.group?.isDirectChat == false) {
-      return _buildStatus(context, const {}, const {});
+      return _buildStatus(context, const {}, const {}, const {});
     }
     _deliveryActions ??= watchRustDatabase(
       (control) => rust_messages.watchDeliveryActions(
@@ -149,6 +150,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             .where((a) => a.type == MessageActionType.ackByUserAt)
             .map((a) => a.messageId)
             .toSet(),
+        (snapshot.data ?? [])
+            .where((a) => a.type == MessageActionType.sendDeferred)
+            .map((a) => a.messageId)
+            .toSet(),
       ),
     );
   }
@@ -157,6 +162,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     BuildContext context,
     Set<String> failedMessageIds,
     Set<String> ackedMessageIds,
+    Set<String> deferredMessageIds,
   ) {
     var icons = <Widget>[];
     var text = '';
@@ -343,6 +349,19 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       if (message.isDeletedFromSender) {
         icon = FaIcon(FontAwesomeIcons.trash, size: 10, color: color);
         text = context.lang.messageWasDeletedShort;
+      }
+
+      // Held back by a server sending limit. The message is still queued
+      // and retried with a growing delay, so it is not shown as failed.
+      if (message.senderId == null &&
+          !message.isDeletedFromSender &&
+          state == MessageSendState.sending &&
+          deferredMessageIds.contains(message.messageId)) {
+        icon = Icon(Icons.schedule, size: 14, color: color);
+        text = context.lang.messageSendDeferred;
+        textWidget = null;
+        onTap = null;
+        hasLoader = false;
       }
 
       if (message.senderId == null &&

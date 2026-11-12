@@ -6,11 +6,11 @@ use crate::database::app::diagnostics::writes;
 use crate::error::Result;
 
 pub async fn seed_mock_gallery(
-    items: Vec<MockGalleryItem>, opened_at: i64, transaction: &DatabaseSession,
+    items: Vec<MockGalleryItem>, transaction: &DatabaseSession,
 ) -> Result<()> {
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = writes::seed_gallery(tx.transaction(), items, opened_at).await;
+    let result = writes::seed_gallery(tx.transaction(), items).await;
 
     tx.finish(result).await
 }

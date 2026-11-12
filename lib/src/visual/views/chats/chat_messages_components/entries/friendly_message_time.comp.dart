@@ -109,6 +109,37 @@ class FriendlyMessageTime extends StatelessWidget {
         ),
       );
     }
+    if (message.senderId == null &&
+        message.ackByServer == null &&
+        (ChatMessageActionScope.maybeOf(context)?.deferredMessageIds.contains(
+              message.messageId,
+            ) ??
+            false)) {
+      // The server holds new messages back until the contact fetches the
+      // ones already waiting for them. Nothing failed: the app retries.
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: Tooltip(
+          message: context.lang.messageSendDeferredExplanation,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.schedule, size: 12, color: iconColor),
+              const SizedBox(width: 2),
+              Text(
+                context.lang.messageSendDeferred,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: iconColor,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if ((message.type != MessageType.text.name &&
             message.type != MessageType.webxdcApp.name) ||
         message.senderId != null) {
@@ -173,11 +204,16 @@ class ChatMessageActionScope extends InheritedWidget {
     required this.ackedMessageIds,
     required super.child,
     this.failedMessageIds = const {},
+    this.deferredMessageIds = const {},
     super.key,
   });
 
   final Set<String> ackedMessageIds;
   final Set<String> failedMessageIds;
+
+  /// Messages the server refused for now because a sending limit was
+  /// reached. They stay queued and are retried with a growing delay.
+  final Set<String> deferredMessageIds;
 
   static ChatMessageActionScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ChatMessageActionScope>();
@@ -185,7 +221,8 @@ class ChatMessageActionScope extends InheritedWidget {
   @override
   bool updateShouldNotify(ChatMessageActionScope oldWidget) =>
       ackedMessageIds != oldWidget.ackedMessageIds ||
-      failedMessageIds != oldWidget.failedMessageIds;
+      failedMessageIds != oldWidget.failedMessageIds ||
+      deferredMessageIds != oldWidget.deferredMessageIds;
 }
 
 String friendlyTime(BuildContext context, DateTime dt) {

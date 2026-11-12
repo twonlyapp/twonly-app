@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/live_location.dart';
 import 'package:twonly/core/database/app/groups/table.dart';
@@ -36,6 +37,22 @@ class _ShareLocationViewState extends State<ShareLocationView> {
     } on Object {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  String _label(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = seconds % 3600 ~/ 60;
+    if (hours == 0) return context.lang.liveLocationMinutes(minutes);
+    if (minutes == 0) return context.lang.liveLocationHours(hours);
+    return context.lang.liveLocationHoursMinutes(hours, minutes);
+  }
+
+  Future<void> _pickCustom() async {
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (_) => _CustomDurationPicker(initialSeconds: _duration),
+    );
+    if (picked != null && mounted) setState(() => _duration = picked);
   }
 
   Future<void> _start() async {
@@ -114,20 +131,33 @@ class _ShareLocationViewState extends State<ShareLocationView> {
                       children: [
                         for (final seconds in LiveLocationService.durations)
                           ChoiceChip(
-                            label: Text(
-                              seconds < 3600
-                                  ? context.lang.liveLocationMinutes(
-                                      seconds ~/ 60,
-                                    )
-                                  : context.lang.liveLocationHours(
-                                      seconds ~/ 3600,
-                                    ),
-                            ),
+                            label: Text(_label(seconds)),
                             selected: _duration == seconds,
                             onSelected: _busy
                                 ? null
                                 : (_) => setState(() => _duration = seconds),
                           ),
+                        ChoiceChip(
+                          avatar:
+                              LiveLocationService.durations.contains(_duration)
+                              ? Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                )
+                              : null,
+                          label: Text(
+                            LiveLocationService.durations.contains(_duration)
+                                ? context.lang.liveLocationCustom
+                                : _label(_duration),
+                          ),
+                          selected: !LiveLocationService.durations.contains(
+                            _duration,
+                          ),
+                          onSelected: _busy ? null : (_) => _pickCustom(),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -145,6 +175,100 @@ class _ShareLocationViewState extends State<ShareLocationView> {
                   ],
                 ],
               ),
+      ),
+    ),
+  );
+}
+
+class _CustomDurationPicker extends StatefulWidget {
+  const _CustomDurationPicker({required this.initialSeconds});
+  final int initialSeconds;
+  @override
+  State<_CustomDurationPicker> createState() => _CustomDurationPickerState();
+}
+
+class _CustomDurationPickerState extends State<_CustomDurationPicker> {
+  /// The wheel stops at 23 h 59 min, just below the 24 hour limit.
+  static const int _maxHours = 23;
+
+  late int _hours = (widget.initialSeconds ~/ 3600).clamp(0, _maxHours);
+  late int _minutes = widget.initialSeconds % 3600 ~/ 60;
+  late final _hourController = FixedExtentScrollController(initialItem: _hours);
+  late final _minuteController = FixedExtentScrollController(
+    initialItem: _minutes,
+  );
+
+  int get _seconds => _hours * 3600 + _minutes * 60;
+
+  bool get _valid =>
+      _seconds >= 60 && _seconds <= LiveLocationService.maxDurationSeconds;
+
+  @override
+  void dispose() {
+    _hourController.dispose();
+    _minuteController.dispose();
+    super.dispose();
+  }
+
+  Widget _column({
+    required int count,
+    required String suffix,
+    required FixedExtentScrollController controller,
+    required ValueChanged<int> onChanged,
+  }) => Expanded(
+    child: CupertinoPicker(
+      itemExtent: 36,
+      scrollController: controller,
+      onSelectedItemChanged: onChanged,
+      children: [
+        for (var i = 0; i < count; i++) Center(child: Text('$i $suffix')),
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.lang.liveLocationDuration,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          SizedBox(
+            height: 216,
+            child: CupertinoTheme(
+              data: CupertinoThemeData(
+                brightness: Theme.of(context).brightness,
+              ),
+              child: Row(
+                children: [
+                  _column(
+                    count: _maxHours + 1,
+                    suffix: 'h',
+                    controller: _hourController,
+                    onChanged: (hours) => setState(() => _hours = hours),
+                  ),
+                  _column(
+                    count: 60,
+                    suffix: 'min',
+                    controller: _minuteController,
+                    onChanged: (minutes) => setState(() => _minutes = minutes),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          MyButton(
+            variant: MyButtonVariant.primaryMiddle,
+            onPressed: _valid ? () => Navigator.pop(context, _seconds) : null,
+            child: Text(context.lang.ok),
+          ),
+        ],
       ),
     ),
   );

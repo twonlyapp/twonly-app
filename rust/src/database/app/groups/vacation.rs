@@ -117,8 +117,8 @@ pub(crate) struct Frozen<'a> {
 /// `now` is reported as `active`. `cap` ends every window there at the latest,
 /// see [`Group::bake_vacations`].
 pub(crate) fn freeze<'a>(
-    sent: Option<i64>, received: Option<i64>, changed: Option<i64>,
-    windows: &[&'a VacationWindow], now: i64, cap: Option<i64>,
+    sent: Option<i64>, received: Option<i64>, changed: Option<i64>, windows: &[&'a VacationWindow],
+    now: i64, cap: Option<i64>,
 ) -> Frozen<'a> {
     let mut order: Vec<usize> = (0..windows.len()).collect();
 

@@ -44,6 +44,7 @@ class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "eu.twonly/photo_picker"
     private val emojiPaint = Paint()
     private var pendingResult: MethodChannel.Result? = null
+    private val photoPickerIo = java.util.concurrent.Executors.newFixedThreadPool(4)
     private var pendingLocationPermissionResult: MethodChannel.Result? = null
     
     private lateinit var pickMultipleMedia: ActivityResultLauncher<PickVisualMediaRequest>
@@ -114,6 +115,14 @@ class MainActivity : FlutterFragmentActivity() {
             flutterEngine.plugins.add(ErrorReportingChannel())
         }
 
+        if (!flutterEngine.plugins.has(eu.twonly.notifications.PlayServicesChannel::class.java)) {
+            flutterEngine.plugins.add(eu.twonly.notifications.PlayServicesChannel())
+        }
+
+        if (!flutterEngine.plugins.has(eu.twonly.notifications.PeriodicPollChannel::class.java)) {
+            flutterEngine.plugins.add(eu.twonly.notifications.PeriodicPollChannel())
+        }
+
         Keyring.initializeNdkContext(applicationContext)
 
 
@@ -141,24 +150,29 @@ class MainActivity : FlutterFragmentActivity() {
                     pendingResult = result
                     pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
-                "getUriBytes" -> {
+                "copyUriToFile" -> {
                     val uriString = call.argument<String>("uri")
-                    if (uriString != null) {
+                    val destination = call.argument<String>("path")
+                    if (uriString == null || destination == null) {
+                        result.error("INVALID_ARGUMENT", "uri and path are required", null)
+                        return@setMethodCallHandler
+                    }
+                    // Copying on the main thread would freeze the UI and force
+                    // a gallery import to read one picture at a time.
+                    photoPickerIo.execute {
                         try {
-                            val uri = Uri.parse(uriString)
-                            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-                            if (inputStream != null) {
-                                val bytes = inputStream.readBytes()
-                                inputStream.close()
-                                result.success(bytes)
-                            } else {
-                                result.error("UNAVAILABLE", "Could not open InputStream", null)
+                            val input: InputStream? = contentResolver.openInputStream(Uri.parse(uriString))
+                            if (input == null) {
+                                runOnUiThread { result.error("UNAVAILABLE", "Could not open InputStream", null) }
+                                return@execute
                             }
+                            input.use { source ->
+                                java.io.File(destination).outputStream().use { source.copyTo(it, 64 * 1024) }
+                            }
+                            runOnUiThread { result.success(true) }
                         } catch (e: Exception) {
-                            result.error("ERROR", e.message, null)
+                            runOnUiThread { result.error("ERROR", e.message, null) }
                         }
-                    } else {
-                        result.error("INVALID_ARGUMENT", "URI string is null", null)
                     }
                 }
                 else -> result.notImplemented()
@@ -183,18 +197,6 @@ class MainActivity : FlutterFragmentActivity() {
             }
             if (call.method == "hasPrecisePermission") {
                 result.success(NativeLocation.hasPrecisePermission())
-                return@setMethodCallHandler
-            }
-            if (call.method == "resolveCity") {
-                val latitude = call.argument<Double>("latitude")
-                val longitude = call.argument<Double>("longitude")
-                if (latitude == null || longitude == null) {
-                    result.success(null)
-                } else {
-                    NativeLocation.resolveCity(latitude, longitude, call.argument<String>("locale")) { city ->
-                        result.success(city)
-                    }
-                }
                 return@setMethodCallHandler
             }
             if (call.method != "requestPrecisePermission") {

@@ -9,7 +9,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
-import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
 import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/messages/table.dart';
@@ -36,6 +35,7 @@ import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/emoji_reactions_row.comp.dart';
 import 'package:twonly/src/visual/views/chats/message_info.view.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
@@ -47,6 +47,7 @@ class MessageContextMenu extends StatelessWidget {
     required this.onResponseTriggered,
     required this.galleryItems,
     required this.mediaFileService,
+    this.ownReactions = const {},
     super.key,
   });
   final Group group;
@@ -55,6 +56,9 @@ class MessageContextMenu extends StatelessWidget {
   final List<MemoryItem> galleryItems;
   final MediaFileService? mediaFileService;
   final VoidCallback onResponseTriggered;
+
+  /// Emojis the user already reacted with. Picking one again removes it.
+  final Set<String> ownReactions;
 
   Future<void> reopenMediaFile(BuildContext context) async {
     if (message.senderId == null) {
@@ -132,50 +136,35 @@ class MessageContextMenu extends StatelessWidget {
     final isLocation =
         LiveLocationService.decode(message.additionalMessageData) != null;
     return ContextMenu(
+      reactions: message.isDeletedFromSender
+          ? null
+          : () => ContextMenuReactions(
+              emojis: quickReactionEmojis(),
+              selected: ownReactions,
+              moreLabel: context.lang.react,
+              onSelected: (emoji) => ownReactions.contains(emoji)
+                  ? removeReaction(message.groupId, message.messageId, emoji)
+                  : sendReaction(message.groupId, message.messageId, emoji),
+              onMore: () async {
+                final layer =
+                    await showModalBottomSheet(
+                          isScrollControlled: true,
+                          context: navigator.context,
+                          backgroundColor: context.color.surface,
+                          builder: (context) {
+                            return const EmojiPickerBottom();
+                          },
+                        )
+                        as EmojiLayerData?;
+                if (layer == null) return;
+                await sendReaction(
+                  message.groupId,
+                  message.messageId,
+                  layer.text,
+                );
+              },
+            ),
       items: () => [
-        if (!message.isDeletedFromSender)
-          ContextMenuItem(
-            title: context.lang.react,
-            onTap: () async {
-              final layer =
-                  await showModalBottomSheet(
-                        context: navigator.context,
-                        backgroundColor: context.color.surface,
-                        builder: (context) {
-                          return const EmojiPickerBottom();
-                        },
-                      )
-                      as EmojiLayerData?;
-              if (layer == null) return;
-
-              await rust_reactions.updateOwnReaction(
-                message: message.messageId,
-                emoji: layer.text,
-                remove: false,
-                transaction: currentDatabaseSession(),
-              );
-
-              await RustApi.sendEncryptedContentToGroup(
-                groupId: message.groupId,
-                content: pb.EncryptedContent(
-                  reaction: pb.EncryptedContent_Reaction(
-                    targetMessageId: message.messageId,
-                    emoji: layer.text,
-                    remove: false,
-                  ),
-                ).writeToBuffer(),
-                onlySendIfNoReceiptsAreOpen: false,
-              );
-            },
-            icon: FontAwesomeIcons.faceLaugh,
-          ),
-        if (!message.isWidgetMedia &&
-            (mediaFileService?.canBeOpenedAgain ?? false))
-          ContextMenuItem(
-            title: context.lang.contextMenuViewAgain,
-            onTap: () => reopenMediaFile(navigator.context),
-            icon: FontAwesomeIcons.clockRotateLeft,
-          ),
         if (!message.isDeletedFromSender)
           ContextMenuItem(
             title: context.lang.reply,
@@ -228,7 +217,32 @@ class MessageContextMenu extends StatelessWidget {
               );
               await HapticFeedback.heavyImpact();
             },
-            icon: FontAwesomeIcons.solidCopy,
+            icon: FontAwesomeIcons.copy,
+          ),
+        if (!message.isWidgetMedia &&
+            (mediaFileService?.canBeOpenedAgain ?? false))
+          ContextMenuItem(
+            title: context.lang.contextMenuViewAgain,
+            onTap: () => reopenMediaFile(navigator.context),
+            icon: FontAwesomeIcons.clockRotateLeft,
+          ),
+        if (!message.isDeletedFromSender)
+          ContextMenuItem(
+            title: context.lang.info,
+            onTap: () async {
+              await navigator.push(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return MessageInfoView(
+                      message: message,
+                      group: group,
+                      galleryItems: galleryItems,
+                    );
+                  },
+                ),
+              );
+            },
+            icon: FontAwesomeIcons.circleInfo,
           ),
         ContextMenuItem(
           title: context.lang.delete,
@@ -269,26 +283,9 @@ class MessageContextMenu extends StatelessWidget {
               );
             }
           },
-          icon: FontAwesomeIcons.trash,
+          icon: FontAwesomeIcons.trashCan,
+          destructive: true,
         ),
-        if (!message.isDeletedFromSender)
-          ContextMenuItem(
-            title: context.lang.info,
-            onTap: () async {
-              await navigator.push(
-                MaterialPageRoute(
-                  builder: (context) {
-                    return MessageInfoView(
-                      message: message,
-                      group: group,
-                      galleryItems: galleryItems,
-                    );
-                  },
-                ),
-              );
-            },
-            icon: FontAwesomeIcons.circleInfo,
-          ),
       ],
       child: child,
     );

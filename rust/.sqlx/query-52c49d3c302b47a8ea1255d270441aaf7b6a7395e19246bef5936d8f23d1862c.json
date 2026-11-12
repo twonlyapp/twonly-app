@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contact_send_backoff SET retry_at = 0 WHERE contact_id = ? AND retry_at > 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "52c49d3c302b47a8ea1255d270441aaf7b6a7395e19246bef5936d8f23d1862c"
+}

@@ -346,6 +346,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
 
   Future<void> _selectEmoji() async {
     final result = await showModalBottomSheet<dynamic>(
+      isScrollControlled: true,
       context: context,
       backgroundColor: context.color.surface,
       builder: (context) => const EmojiPickerBottom(),

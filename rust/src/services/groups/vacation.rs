@@ -251,9 +251,7 @@ mod tests {
 
             streak(&ctx, 7, 50).await?;
 
-            let result = GroupService::new(&ctx)
-                .start_vacation(5, "🏕️".into())
-                .await;
+            let result = GroupService::new(&ctx).start_vacation(5, "🏕️".into()).await;
 
             assert!(result.is_err(), "{plan} must not go on vacation");
 
@@ -528,7 +526,10 @@ mod tests {
             .execute(&database.pool)
             .await?;
 
-        assert_eq!(Group::vacation_candidates(&database.pool).await?, vec![kept]);
+        assert_eq!(
+            Group::vacation_candidates(&database.pool).await?,
+            vec![kept]
+        );
 
         assert_eq!(
             GroupService::new(&ctx)

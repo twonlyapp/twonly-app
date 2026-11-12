@@ -1,11 +1,18 @@
 package eu.twonly.notifications
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.NativeErrorReporting
+import eu.twonly.R
 import eu.twonly.widget.TwonlyWidgetProvider
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
@@ -16,6 +23,36 @@ class TwonlyNotificationWorker(
     params: WorkerParameters,
 ) : Worker(appContext, params) {
     private val activeRun = AtomicLong(0)
+
+    // The push service enqueues this worker as expedited. Below Android 12
+    // WorkManager runs expedited work as a foreground service and asks for this
+    // first; the default implementation throws, so the job failed before
+    // doWork and no push was ever processed on Android 11 and older.
+    override fun getForegroundInfo(): ForegroundInfo {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            applicationContext.getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(
+                    NotificationChannel(
+                        SYNC_CHANNEL_ID,
+                        applicationContext.getString(R.string.notification_sync_channel),
+                        NotificationManager.IMPORTANCE_MIN,
+                    ),
+                )
+        }
+        val notification = NotificationCompat.Builder(applicationContext, SYNC_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(applicationContext.getString(R.string.notification_sync_title))
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .build()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(SYNC_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(SYNC_NOTIFICATION_ID, notification)
+        }
+    }
 
     override fun onStopped() {
         NativeNotificationBridge.cancelRun(activeRun.get())
@@ -128,6 +165,8 @@ class TwonlyNotificationWorker(
     private companion object {
         const val TAG = "TwonlyNotification"
         const val MAX_RETRIES = 2
+        const val SYNC_CHANNEL_ID = "twonly_background_sync"
+        const val SYNC_NOTIFICATION_ID = 0x7A02
 
         // Split from the old single 25s budget: the drain only has to produce
         // the batch, and everything deferred behind it gets its own window.

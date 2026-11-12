@@ -135,12 +135,11 @@ pub async fn sync_permissions(ctx: &Arc<Context>) -> Result<()> {
 
     let database = ctx.app_db.read().await.clone();
 
-    let current = sqlx::query!(
-        "SELECT user_id, widget_sharing_granted FROM contacts WHERE accepted = 1",
-    )
-    .map(|row| (row.user_id, row.widget_sharing_granted))
-    .fetch_all(&database.pool)
-    .await?;
+    let current =
+        sqlx::query!("SELECT user_id, widget_sharing_granted FROM contacts WHERE accepted = 1",)
+            .map(|row| (row.user_id, row.widget_sharing_granted))
+            .fetch_all(&database.pool)
+            .await?;
 
     let mut changed = Vec::new();
 
@@ -203,12 +202,9 @@ pub async fn register_widget(ctx: &Arc<Context>, widget_id: &str, platform: &str
 pub async fn unregister_widget(ctx: &Arc<Context>, widget_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query!(
-        "DELETE FROM home_widgets WHERE widget_id = ?",
-        widget_id
-    )
-    .execute(&database.pool)
-    .await?;
+    sqlx::query!("DELETE FROM home_widgets WHERE widget_id = ?", widget_id)
+        .execute(&database.pool)
+        .await?;
 
     sync_permissions(ctx).await
 }
@@ -588,19 +584,13 @@ async fn remove_media(ctx: &Arc<Context>, media: &[(String, String)]) -> Result<
     let mut transaction = database.pool.begin().await?;
 
     for (media_id, _) in media {
-        sqlx::query!(
-            "DELETE FROM messages WHERE media_id = ?",
-            media_id
-        )
-        .execute(&mut *transaction)
-        .await?;
+        sqlx::query!("DELETE FROM messages WHERE media_id = ?", media_id)
+            .execute(&mut *transaction)
+            .await?;
 
-        sqlx::query!(
-            "DELETE FROM media_files WHERE media_id = ?",
-            media_id
-        )
-        .execute(&mut *transaction)
-        .await?;
+        sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
+            .execute(&mut *transaction)
+            .await?;
     }
 
     transaction.commit().await?;

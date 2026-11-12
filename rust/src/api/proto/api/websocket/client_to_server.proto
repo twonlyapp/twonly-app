@@ -255,6 +255,9 @@ message ApplicationData {
   message GetMemoriesList {
     int64 offset_date = 1;
     int64 limit = 2;
+    // Continuation cursor: the page continues strictly after
+    // (offset_date, offset_media_id), newest first.
+    optional string offset_media_id = 3;
   }
 
   message GetMemoriesUrl {
@@ -269,6 +272,24 @@ message ApplicationData {
   }
 
   message DisableMemoriesBackup {}
+
+  // Claims a memories importer pairing this app scanned.
+  message ClaimImporterPairing {
+    string pairing_id = 1;
+    bytes envelope = 2;
+    string import_id = 3;
+    bytes token_hash = 4;
+  }
+
+  message ListMemoryImporters {}
+
+  message RevokeMemoryImporter {
+    string importer_id = 1;
+  }
+
+  message DeleteMemoryImporterUploads {
+    string importer_id = 1;
+  }
 
   // Asks the server to (re)start a mailbox drain for the authenticated user.
   // The server responds immediately; messages arrive as PendingMessagesV2.
@@ -305,6 +326,10 @@ message ApplicationData {
     DisableMemoriesBackup disable_memories_backup = 39;
     UploadPqcPreKeys upload_pqc_prekeys = 40;
     RequestPendingMessages request_pending_messages = 43;
+    ClaimImporterPairing claim_importer_pairing = 44;
+    ListMemoryImporters list_memory_importers = 45;
+    RevokeMemoryImporter revoke_memory_importer = 46;
+    DeleteMemoryImporterUploads delete_memory_importer_uploads = 47;
   }
 }
 

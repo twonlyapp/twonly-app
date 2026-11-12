@@ -26,8 +26,6 @@
     </a>
 </div>
 
-twonly is still in its early stages. Features and reliability are being improved, and feedback is welcome.
-
 ## Features
 
 - Photo and video sharing with editing tools and viewing timers
@@ -37,6 +35,7 @@ twonly is still in its early stages. Features and reliability are being improved
 - Custom stickers and mini-games in chats
 - Send photos directly to friends' home screen widgets
 - Memories with a map and end-to-end encrypted cloud backups
+- Import Snapchat Memories using [import.twonly.eu](https://import.twonly.eu)
 - End-to-end encryption using the [Signal Protocol](https://signal.org/docs/specifications/pqxdh/)
 - No ads, tracking, or data sales
 - No email or phone number required to register

@@ -26,6 +26,12 @@ Future<WebxdcCardApp?> webxdcCardApp({
   transaction: transaction,
 );
 
+Future<List<WebxdcCardApp>> webxdcCardApps({
+  required DatabaseSession transaction,
+}) => RustLib.instance.api.crateBridgeDatabaseWebxdcWebxdcCardApps(
+  transaction: transaction,
+);
+
 Future<WebxdcCardInstance?> webxdcCardInstance({
   required String id,
   required DatabaseSession transaction,

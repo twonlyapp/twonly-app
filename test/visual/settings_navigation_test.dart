@@ -23,8 +23,11 @@ import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
+import 'package:twonly/src/visual/views/settings/memories_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
@@ -52,12 +55,23 @@ class _SettingsPurchases extends ChangeNotifier
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+const _memoriesBackupDetail = '/settings/memories/backup';
+const _storageContents = '/settings/memories/backup/contents';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const permissions = MethodChannel('flutter.baseflow.com/permissions/methods');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   var notificationPermission = 1;
+  const periodicPoll = MethodChannel('eu.twonly/periodic_poll');
+  var hasPlayServices = false;
+  var pollEnabled = false;
+  var ignoringBatteryOptimizations = false;
+  var backgroundRestricted = false;
+  final pollChanges = <bool>[];
+  var batterySettingsOpened = 0;
+  var appSettingsOpened = 0;
   final api = _SettingsApi();
   late Directory directory;
 
@@ -81,15 +95,47 @@ void main() {
       ),
     );
     notificationPermission = 1;
-    messenger.setMockMethodCallHandler(permissions, (call) async {
-      if (call.method == 'checkPermissionStatus') return notificationPermission;
-      if (call.method == 'openAppSettings') return true;
-      return null;
-    });
+    hasPlayServices = false;
+    pollEnabled = false;
+    ignoringBatteryOptimizations = false;
+    backgroundRestricted = false;
+    pollChanges.clear();
+    batterySettingsOpened = 0;
+    appSettingsOpened = 0;
+    messenger
+      ..setMockMethodCallHandler(periodicPoll, (call) async {
+        if (call.method == 'openBatterySettings') {
+          batterySettingsOpened++;
+          return null;
+        }
+        if (call.method == 'setEnabled') {
+          pollEnabled = call.arguments as bool;
+          pollChanges.add(pollEnabled);
+        }
+        return {
+          'hasPlayServices': hasPlayServices,
+          'enabled': pollEnabled,
+          'intervalMinutes': 15,
+          'ignoringBatteryOptimizations': ignoringBatteryOptimizations,
+          'backgroundRestricted': backgroundRestricted,
+        };
+      })
+      ..setMockMethodCallHandler(permissions, (call) async {
+        if (call.method == 'checkPermissionStatus') {
+          return notificationPermission;
+        }
+        if (call.method == 'openAppSettings') {
+          appSettingsOpened++;
+          return true;
+        }
+        return null;
+      });
   });
 
   tearDown(() async {
-    messenger.setMockMethodCallHandler(permissions, null);
+    messenger
+      ..setMockMethodCallHandler(permissions, null)
+      ..setMockMethodCallHandler(periodicPoll, null);
     await locator.reset();
     await directory.delete(recursive: true);
     AppEnvironment.initTesting();
@@ -122,6 +168,21 @@ void main() {
             value: purchases,
             child: const BackupView(),
           ),
+        ),
+        GoRoute(
+          path: Routes.settingsMemories,
+          builder: (_, _) => ChangeNotifierProvider<PurchasesProvider>.value(
+            value: purchases,
+            child: const MemoriesSettingsView(),
+          ),
+        ),
+        GoRoute(
+          path: _memoriesBackupDetail,
+          builder: (_, _) => const MemoriesBackupDetailView(),
+        ),
+        GoRoute(
+          path: _storageContents,
+          builder: (_, _) => const StorageContentsView(),
         ),
         GoRoute(
           path: Routes.settingsPrivacy,
@@ -241,15 +302,15 @@ void main() {
   });
 
   testWidgets(
-    'design contains no camera controls and uses a positive news switch',
+    'design contains no camera controls and can always hide the news icon',
     (tester) async {
       await pumpSettings(tester, location: Routes.settingsAppearance);
       expect(find.text('Mit geöffneter Kamera starten'), findsNothing);
       final shortcut = find.ancestor(
-        of: find.text('Neuigkeiten-Symbol anzeigen'),
+        of: find.text('News-Symbol immer ausblenden'),
         matching: find.byType(SwitchListTile),
       );
-      expect(tester.widget<SwitchListTile>(shortcut).value, isTrue);
+      expect(tester.widget<SwitchListTile>(shortcut).value, isFalse);
       await tester.tap(shortcut);
       await pumpNative(
         tester,
@@ -281,6 +342,150 @@ void main() {
   );
 
   testWidgets(
+    'periodic checks require confirmation and guide users to battery settings',
+    (tester) async {
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      final toggle = find.widgetWithText(
+        SwitchListTile,
+        'Check for new messages periodically',
+      );
+      expect(toggle, findsOneWidget);
+      expect(find.text('Reset notification tokens'), findsNothing);
+      expect(find.textContaining('every 15 minutes'), findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('several hours'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, isEmpty);
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enable'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true]);
+      expect(find.text('Battery optimization'), findsOneWidget);
+      expect(find.textContaining('choose All apps'), findsNWidgets(2));
+      await tester.tap(find.text('Open settings'));
+      await tester.pumpAndSettle();
+      expect(batterySettingsOpened, 1);
+
+      ignoringBatteryOptimizations = true;
+      backgroundRestricted = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Battery optimization: disabled'), findsOneWidget);
+      final restriction = find.text('Background activity is restricted');
+      await tester.ensureVisible(restriction);
+      await tester.tap(restriction);
+      await tester.pumpAndSettle();
+      expect(appSettingsOpened, 1);
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true, false]);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Battery optimization: disabled'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
+    'FCM devices only retain periodic settings to disable an existing opt-in',
+    (tester) async {
+      hasPlayServices = true;
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      expect(find.text('Check for new messages periodically'), findsNothing);
+      pollEnabled = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      final toggle = find.widgetWithText(
+        SwitchListTile,
+        'Check for new messages periodically',
+      );
+      expect(toggle, findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(pollChanges, [false]);
+      expect(find.text('Check for new messages periodically'), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
+    'battery guidance can be deferred without disabling periodic checks',
+    (tester) async {
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      await tester.tap(find.text('Check for new messages periodically'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enable'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Later'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true]);
+      expect(batterySettingsOpened, 0);
+      expect(find.text('Battery optimization: active'), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  for (final locale in ['de', 'ar']) {
+    testWidgets(
+      'periodic check dialogs fit with large $locale text',
+      (tester) async {
+        ignoringBatteryOptimizations = true;
+        await pumpSettings(
+          tester,
+          location: Routes.settingsNotification,
+          locale: locale,
+          textScale: 1.5,
+        );
+        final lang = AppLocalizations.of(
+          tester.element(find.byType(NotificationView)),
+        )!;
+        final toggle = find.text(lang.settingsNotifyPollTitle);
+        await tester.ensureVisible(toggle);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(find.text(lang.enable));
+        await tester.tap(find.text(lang.enable));
+        await tester.pumpAndSettle();
+        expect(pollChanges, [true]);
+        // An existing battery exemption needs no second prompt.
+        expect(find.byType(AlertDialog), findsNothing);
+        final battery = find.text(lang.settingsNotifyPollBatteryDisabled);
+        await tester.ensureVisible(battery);
+        await tester.tap(battery);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(find.text(lang.settingsNotifyPollLater));
+        await tester.tap(find.text(lang.settingsNotifyPollLater));
+        await tester.pumpAndSettle();
+        expect(batterySettingsOpened, 0);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+  }
+
+  testWidgets(
     'account backup status loads even while cloud usage is unavailable',
     (tester) async {
       final usage = Completer<FrbMemoriesUsage>();
@@ -299,6 +504,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Noch nicht gesichert'), findsOneWidget);
+      expect(find.text('Memories Backup'), findsOneWidget);
       expect(find.text('Upgrade erforderlich'), findsOneWidget);
       final save = tester.widget<MyButton>(find.byType(MyButton));
       expect(save.onPressed, isNull);
@@ -309,6 +515,67 @@ void main() {
       await pumpNative(tester);
     },
   );
+
+  testWidgets(
+    'Memories settings hold backup, saving and import in one place',
+    (tester) async {
+      final usage = Completer<FrbMemoriesUsage>();
+      api.loadUsage = () => usage.future;
+      await pumpSettings(
+        tester,
+        location: Routes.settingsMemories,
+        textScale: 1.5,
+      );
+      expect(find.text('Upgrade erforderlich'), findsOneWidget);
+      for (final entry in [
+        'Kopie in System-Galerie speichern',
+        'Standort in Memories speichern',
+        'Aus anderen Apps importieren',
+      ]) {
+        await tester.scrollUntilVisible(find.text(entry), 100);
+        expect(find.text(entry), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+      usage.complete(
+        const FrbMemoriesUsage(currentBytes: 0, count: 0, maxBytes: 1000000),
+      );
+      await pumpNative(tester);
+    },
+  );
+
+  testWidgets('Memories backup shows its usage and how to turn it off', (
+    tester,
+  ) async {
+    api.loadUsage = () async => const FrbMemoriesUsage(
+      currentBytes: 1200000000,
+      count: 340,
+      maxBytes: 5000000000,
+    );
+    await pumpSettings(tester, location: _memoriesBackupDetail);
+    await pumpNative(
+      tester,
+      until: () => find.text('340 Memories in der Cloud').evaluate().isNotEmpty,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('24 % belegt'), findsOneWidget);
+    expect(find.text('Jetzt synchronisieren'), findsOneWidget);
+    expect(find.text('Speicherplatz freigeben'), findsOneWidget);
+    expect(find.text('Cloud-Backup deaktivieren'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('free up space shows an empty state without memories', (
+    tester,
+  ) async {
+    await pumpSettings(tester, location: _storageContents);
+    await pumpNative(
+      tester,
+      until: () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+    );
+    expect(find.text('Speicherplatz freigeben'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'configured friends are not reported as active until they confirm',

@@ -759,17 +759,35 @@ impl WebxdcService {
             .execute(&mut **transaction)
             .await?;
 
+            // Nothing shows a parked update: if the card was deleted here, the
+            // sender sees it delivered while this device never plays it.
+            tracing::info!(
+                instance_id = %update.instance_id,
+                update_message_id = message_id,
+                sender_id,
+                pending = pending.0 + 1,
+                "parked incoming webxdc update, instance unknown"
+            );
+
             return Ok(());
         };
 
         if instance.group_id != group_id {
-            tracing::warn!("webxdc update arrived in the wrong chat, dropping");
+            tracing::warn!(
+                instance_id = %update.instance_id,
+                update_message_id = message_id,
+                "webxdc update arrived in the wrong chat, dropping"
+            );
 
             return Ok(());
         }
 
         if !Self::within_instance_budget(transaction, &update.instance_id).await? {
-            tracing::warn!("webxdc instance is over budget, dropping update");
+            tracing::warn!(
+                instance_id = %update.instance_id,
+                update_message_id = message_id,
+                "webxdc instance is over budget, dropping update"
+            );
 
             return Ok(());
         }
@@ -793,6 +811,15 @@ impl WebxdcService {
             received_at,
         )
         .await?;
+
+        tracing::info!(
+            instance_id = %update.instance_id,
+            update_message_id = message_id,
+            sender_id,
+            inserted,
+            has_info = info.is_some(),
+            "stored incoming webxdc update"
+        );
 
         if !inserted {
             return Ok(());
@@ -842,6 +869,14 @@ impl WebxdcService {
         )
         .fetch_all(&mut **transaction)
         .await?;
+
+        if !rows.is_empty() {
+            tracing::info!(
+                instance_id,
+                pending = rows.len(),
+                "applying parked webxdc updates to the arrived instance"
+            );
+        }
 
         for row in rows {
             if row.message_id.is_empty() || row.payload.len() > SEND_UPDATE_MAX_SIZE {
@@ -1642,6 +1677,12 @@ impl WebxdcService {
         .await?;
 
         transaction.commit().await?;
+
+        tracing::info!(
+            instance_id,
+            app_id = %instance.app_id,
+            "deleted webxdc instance and its update log"
+        );
 
         Ok(Some(instance.origin_token))
     }

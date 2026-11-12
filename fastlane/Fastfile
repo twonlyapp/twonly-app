@@ -1,59 +1,159 @@
+require "shellwords"
 require "tempfile"
+require "tmpdir"
+require "fileutils"
+
+def release_notes_for(project_root)
+  pubspec_path = File.join(project_root, "pubspec.yaml")
+  UI.user_error!("Could not find pubspec.yaml at #{pubspec_path}") unless File.file?(pubspec_path)
+  version_match = File.read(pubspec_path).match(/^version:[ \t]*([^+\r\n]+)/)
+  UI.user_error!("Could not extract version from pubspec.yaml") unless version_match
+  version = version_match[1].strip
+
+  changelog_path = File.join(project_root, "CHANGELOG.md")
+  if File.file?(changelog_path)
+    escaped_version = Regexp.escape(version)
+    pattern = /^##[ \t]+(?:#{escaped_version}|\[#{escaped_version}\])(?:[ \t]+[^\r\n]*)?\r?\n(.*?)(?=^##[ \t]+|\z)/m
+    match = File.read(changelog_path).match(pattern)
+    notes = match && match[1].strip
+  end
+
+  if notes.nil? || notes.empty?
+    UI.important("No release notes found for #{version} in CHANGELOG.md. Using default description.")
+    notes = "Small bug fixes."
+  end
+  [version, notes]
+end
 
 default_platform(:android)
+
+platform :ios do
+  desc "Build a release IPA and upload it to TestFlight (skip_build:true re-exports the existing archive)"
+  lane :beta do |options|
+    upload_options = {
+      app_identifier: 'eu.twonly',
+      apple_id: '6743774441',
+      skip_waiting_for_build_processing: true
+    }
+    api_key_configured = %w[PILOT_API_KEY_PATH APP_STORE_CONNECT_API_KEY_PATH PILOT_API_KEY APP_STORE_CONNECT_API_KEY].any? do |name|
+      !ENV[name].to_s.strip.empty?
+    end
+    unless api_key_configured
+      # With apple_id set, Pilot skips login. Transporter's later username prompt
+      # does not update Pilot's username, so altool can receive no credentials.
+      username = (options[:username] || ENV['PILOT_USERNAME'] || ENV['FASTLANE_USER']).to_s.strip
+      username = UI.input("Apple Developer account email:").to_s.strip if username.empty?
+      UI.user_error!("An upload username is required. Set PILOT_USERNAME or pass username:your-email.") if username.empty?
+      upload_options[:username] = username
+      upload_options[:provider_public_id] = options[:provider_public_id] if options[:provider_public_id]
+    end
+
+    project_root = File.expand_path("..", __dir__)
+    archive_path = File.join(project_root, "build/ios/archive/Runner.xcarchive")
+    ipa_dir = File.join(project_root, "build/ios/ipa")
+    ipa_glob = File.join(ipa_dir, "*.ipa")
+    skip_build = options[:skip_build].to_s == "true"
+    if skip_build && !File.directory?(archive_path)
+      UI.user_error!("No existing archive at #{archive_path}. Run fastlane ios beta without skip_build:true first.")
+    end
+    # Flutter may finish archiving without producing an IPA if export fails.
+    # Remove previous exports so that only this build can be uploaded.
+    FileUtils.rm_f(Dir.glob(ipa_glob))
+    Tempfile.create(["twonly-export-options", ".plist"]) do |export_options|
+      # Request automatic distribution signing for the app and every extension.
+      # Leave certificates and profiles to Xcode, including cloud-managed signing.
+      export_options.write(<<~PLIST)
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>destination</key><string>export</string>
+          <key>signingStyle</key><string>automatic</string>
+          <key>teamID</key><string>CN332ZUGRP</string>
+          <key>manageAppVersionAndBuildNumber</key><false/>
+        </dict></plist>
+      PLIST
+      export_options.flush
+
+      Dir.chdir(project_root) do
+        if skip_build
+          sh("xcodebuild", "-exportArchive", "-archivePath", archive_path,
+             "-exportPath", ipa_dir, "-exportOptionsPlist", export_options.path,
+             "-allowProvisioningUpdates")
+        else
+          sh("flutter", "build", "ipa", "--release", "--export-options-plist", export_options.path)
+        end
+      end
+    end
+
+    ipas = Dir.glob(ipa_glob)
+    unless ipas.length == 1
+      UI.user_error!("Expected one freshly exported IPA in build/ios/ipa; found #{ipas.length}. Check the Flutter export and Xcode signing configuration.")
+    end
+
+    # App-specific passwords stay in Fastlane's Keychain or its password env var.
+    upload_to_testflight(**upload_options.merge(ipa: ipas.first))
+  end
+end
 
 platform :android do
   desc "Build a release App Bundle and submit it to the Google Play Internal Track"
   lane :internal do
     project_root = File.expand_path("..", __dir__)
+    _version, release_notes = release_notes_for(project_root)
     Dir.chdir(project_root) do
       sh("flutter build appbundle --release")
     end
 
-    upload_to_play_store(
-      track: 'internal',
-      aab: File.join(project_root, 'build/app/outputs/bundle/release/app-release.aab'),
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
+    # Supply uploads changelogs separately from store metadata. Isolate English
+    # notes from the repository's other metadata and clean up even on failure.
+    Dir.mktmpdir("twonly-play-notes") do |metadata_path|
+      changelog_dir = File.join(metadata_path, "en-US", "changelogs")
+      FileUtils.mkdir_p(changelog_dir)
+      File.write(File.join(changelog_dir, "default.txt"), release_notes)
+      upload_to_play_store(
+        track: 'internal',
+        aab: File.join(project_root, 'build/app/outputs/bundle/release/app-release.aab'),
+        metadata_path: metadata_path,
+        skip_upload_changelogs: false,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      )
+    end
+  end
+
+  desc "Promote the existing internal release to closed, open, and production by default; use track: to select one destination"
+  lane :promote do |options|
+    target = options[:track].to_s.strip
+    if target == 'internal'
+      UI.user_error!("The source track is internal. Choose track:all, track:closed, track:open, track:production, or a custom closed testing track name.")
+    end
+    targets = target.empty? || target == 'all' ? %w[closed open production] : [target]
+    targets.each do |destination|
+      destination = { 'closed' => 'twonly-closed-tests', 'open' => 'beta' }.fetch(destination, destination)
+
+      UI.message("Promoting the existing internal release to #{destination}...")
+      upload_to_play_store(
+        track: 'internal',
+        track_promote_to: destination,
+        track_promote_release_status: 'completed',
+        skip_upload_apk: true,
+        skip_upload_aab: true,
+        skip_upload_metadata: true,
+        # Preserve the uploaded release notes when promoting the same bundle.
+        skip_upload_changelogs: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      )
+    end
   end
 
   desc "Build the application locally and publish it to GitHub and F-Droid"
   lane :fdroid do |options|
-    # Read pubspec.yaml to get the version
-    pubspec_path = File.expand_path("../pubspec.yaml", __dir__)
-    unless File.exist?(pubspec_path)
-      UI.user_error!("Could not find pubspec.yaml at #{pubspec_path}")
-    end
-    
-    pubspec_content = File.read(pubspec_path)
-    version_match = pubspec_content.match(/^version:\s*([^+]+)/)
-    unless version_match
-      UI.user_error!("Could not extract version from pubspec.yaml")
-    end
-    
-    version = version_match[1].strip
+    version, release_notes = release_notes_for(File.expand_path("..", __dir__))
     tag_name = "v#{version}"
     UI.message("Extracted version: #{version} (tag: #{tag_name})")
-
-    # Load release notes from CHANGELOG.md
-    changelog_path = File.expand_path("../CHANGELOG.md", __dir__)
-    release_notes = "Small bug fixes."
-    if File.exist?(changelog_path)
-      changelog_content = File.read(changelog_path)
-      escaped_version = Regexp.escape(version)
-      pattern = /##\s*\[?#{escaped_version}\]?(.*?)(?=##\s*|\z)/m
-      match = changelog_content.match(pattern)
-      if match
-        release_notes = match[1].strip
-        UI.message("Loaded release notes from CHANGELOG.md:\n#{release_notes}")
-      else
-        UI.important("Could not find release notes for version #{version} in CHANGELOG.md. Using default description.")
-      end
-    else
-      UI.important("CHANGELOG.md not found at #{changelog_path}. Using default description.")
-    end
 
     github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
     unless File.file?(github_properties_path)
@@ -193,7 +293,8 @@ platform :android do
     if File.exist?(update_script)
       UI.message("Executing F-Droid update script...")
       Dir.chdir(fdroid_dir) do
-        sh("chmod +x ./update.sh && ./update.sh")
+        app_dir = File.expand_path("..", __dir__)
+        sh("chmod +x ./update.sh && TWONLY_APP_DIR=#{Shellwords.escape(app_dir)} ./update.sh")
       end
     else
       UI.important("F-Droid update script not found at #{update_script}")

@@ -70,9 +70,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator),
-      ).value,
+      tester
+          .widget<LinearProgressIndicator>(
+            find.byType(LinearProgressIndicator),
+          )
+          .value,
       0.5,
     );
 

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM contact_send_backoff WHERE contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "0ea430dbabce2471401c2f7a455376dfa2610e168031a5b837d487459716499b"
+}

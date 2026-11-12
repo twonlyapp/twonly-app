@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/stories.dart' as stories;
@@ -89,6 +90,7 @@ class _ShareImageView extends State<ShareImageView> {
   late StreamSubscription<List<Group>> allGroupSub;
   String lastQuery = '';
   int _updateGroupsGeneration = 0;
+  Map<String, FlameState> _flameStates = {};
   Set<String>? _storyAudienceChats;
 
   @override
@@ -113,7 +115,11 @@ class _ShareImageView extends State<ShareImageView> {
             ),
           );
     allGroupSub = groups.listen((allGroups) async {
-      if (!mounted) return;
+      final generation = ++_updateGroupsGeneration;
+      final states = await rust_groups.flameStates(
+        groupIds: allGroups.map((group) => group.groupId).toList(),
+      );
+      if (!mounted || generation != _updateGroupsGeneration) return;
       if (widget.sendToWidget) {
         final allowedGroupIds = allGroups.map((group) => group.groupId).toSet();
         for (final groupId in widget.selectedGroupIds.toList()) {
@@ -122,10 +128,9 @@ class _ShareImageView extends State<ShareImageView> {
           }
         }
       }
-      setState(() {
-        _allGroups = allGroups;
-      });
-      await _filterUsers(lastQuery);
+      _allGroups = allGroups;
+      _flameStates = states;
+      _filterUsers(lastQuery);
     });
 
     unawaited(initAsync());
@@ -147,16 +152,10 @@ class _ShareImageView extends State<ShareImageView> {
     super.dispose();
   }
 
-  Future<void> updateGroups(List<Group> groups) async {
-    final generation = ++_updateGroupsGeneration;
-    // The counters come from Rust in one batch: a sort comparator cannot await,
-    // so every value has to be in hand before sorting starts.
-    final states = await rust_groups.flameStates(
-      groupIds: groups.map((g) => g.groupId).toList(),
-    );
-    if (!mounted || generation != _updateGroupsGeneration) return;
-
-    int flameOf(Group group) => states[group.groupId]?.counter ?? 0;
+  void updateGroups(List<Group> groups) {
+    // Selection and search use the latest snapshot immediately. Reload the
+    // counters only when the database supplies new groups, never on a tap.
+    int flameOf(Group group) => _flameStates[group.groupId]?.counter ?? 0;
 
     // Sort contacts by flameCounter and then by totalMediaCounter
     groups.sort((a, b) {
@@ -200,10 +199,10 @@ class _ShareImageView extends State<ShareImageView> {
     });
   }
 
-  Future<void> _filterUsers(String query) async {
+  void _filterUsers(String query) {
     lastQuery = query;
     if (query.isEmpty) {
-      await updateGroups(
+      updateGroups(
         _allGroups
             .where(
               (x) =>
@@ -220,15 +219,14 @@ class _ShareImageView extends State<ShareImageView> {
           (user) => user.groupName.toLowerCase().contains(query.toLowerCase()),
         )
         .toList();
-    await updateGroups(usersFiltered);
+    updateGroups(usersFiltered);
   }
 
   /// A selection made outside the list, e.g. through a contact group, moves
   /// the chat to the top of it.
   void updateSelectedGroupIds(String groupId, bool checked) {
     widget.updateSelectedGroupIds(groupId, checked);
-    setState(() {});
-    unawaited(_filterUsers(lastQuery));
+    _filterUsers(lastQuery);
   }
 
   /// A chat ticked in the list itself stays where it is, so the rows do not
@@ -333,16 +331,23 @@ class _ShareImageView extends State<ShareImageView> {
                           selectedGroupIds: widget.selectedGroupIds,
                           updateSelectedGroupIds: updateSelectedGroupIds,
                         ),
-                        const SizedBox(height: 10),
-                        StoryTargetSelector(
-                          target: widget.storyTarget,
-                          enabled: _storyPossible,
-                          onChanged: () => setState(() {}),
-                          onAudienceChanged: (chats) {
-                            if (!mounted) return;
-                            setState(() => _storyAudienceChats = chats);
-                          },
-                        ),
+                        // A twonly never goes into a story, so the section is
+                        // left out rather than shown disabled.
+                        if (!widget
+                            .mediaFileService
+                            .mediaFile
+                            .requiresAuthentication) ...[
+                          const SizedBox(height: 10),
+                          StoryTargetSelector(
+                            target: widget.storyTarget,
+                            enabled: _storyPossible,
+                            onChanged: () => setState(() {}),
+                            onAudienceChanged: (chats) {
+                              if (!mounted) return;
+                              setState(() => _storyAudienceChats = chats);
+                            },
+                          ),
+                        ],
                         // The next section's heading brings its own space.
                         const SizedBox(height: 4),
                       ],
@@ -351,12 +356,7 @@ class _ShareImageView extends State<ShareImageView> {
                         selectedGroupIds: widget.selectedGroupIds,
                         updateSelectedGroupIds: updateSelectedGroupIds,
                         title: context.lang.shareImagePinnedContacts,
-                        showSelectAll:
-                            !widget.sendToWidget &&
-                            !widget
-                                .mediaFileService
-                                .mediaFile
-                                .requiresAuthentication,
+                        showSelectAll: !widget.sendToWidget,
                       ),
                       if (_pinnedContacts.isNotEmpty)
                         const SizedBox(height: 10),
@@ -365,12 +365,7 @@ class _ShareImageView extends State<ShareImageView> {
                         selectedGroupIds: widget.selectedGroupIds,
                         updateSelectedGroupIds: updateSelectedGroupIds,
                         title: context.lang.shareImageBestFriends,
-                        showSelectAll:
-                            !widget.sendToWidget &&
-                            !widget
-                                .mediaFileService
-                                .mediaFile
-                                .requiresAuthentication,
+                        showSelectAll: !widget.sendToWidget,
                       ),
                       if (_bestFriends.isNotEmpty) const SizedBox(height: 10),
                       if (_otherUsers.isNotEmpty)
@@ -403,10 +398,9 @@ class _ShareImageView extends State<ShareImageView> {
                                           ).colorScheme.outline,
                                         );
                                       }),
-                                      onChanged: (a) async {
+                                      onChanged: (a) {
                                         hideArchivedUsers = !hideArchivedUsers;
-                                        await _filterUsers(lastQuery);
-                                        if (mounted) setState(() {});
+                                        _filterUsers(lastQuery);
                                       },
                                     ),
                                   ),

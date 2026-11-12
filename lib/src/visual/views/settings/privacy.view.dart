@@ -4,11 +4,10 @@ import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/settings/components/location_setting.dart';
 import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class PrivacyView extends StatefulWidget {
@@ -19,41 +18,7 @@ class PrivacyView extends StatefulWidget {
 }
 
 class _PrivacyViewState extends State<PrivacyView> {
-  bool _updatingLocationSticker = false;
-
-  Future<void> toggleLocationSticker() async {
-    if (_updatingLocationSticker) return;
-    setState(() => _updatingLocationSticker = true);
-    final enabled = userService.currentUser.enableLocationSticker;
-    try {
-      if (!enabled &&
-          !await LocationMetadataService.requestPrecisePermission()) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.lang.memoryLocationPermissionDenied),
-            ),
-          );
-        }
-        return;
-      }
-      await UserService.update((user) => user.enableLocationSticker = !enabled);
-    } on Object catch (error) {
-      Log.warn('Could not update location sticker setting: $error');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.lang.memoryLocationPermissionDenied)),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _updatingLocationSticker = false);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _isUpdatingLocationSetting = false;
 
   Future<void> toggleAuthRequirementOnStartup() async {
     final isAuth = await authenticateUser(
@@ -75,8 +40,23 @@ class _PrivacyViewState extends State<PrivacyView> {
     setState(() {});
   }
 
+  Future<void> toggleLocationFilter() async {
+    if (_isUpdatingLocationSetting) return;
+    setState(() => _isUpdatingLocationSetting = true);
+    await toggleLocationSetting(
+      context,
+      enabled: (user) => user.locationFilter,
+      set: (user, value) => user.locationFilter = value,
+    );
+    if (mounted) setState(() => _isUpdatingLocationSetting = false);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final subtitleStyle = TextStyle(
+      fontSize: 13,
+      color: context.color.onSurfaceVariant,
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsPrivacy),
@@ -122,19 +102,11 @@ class _PrivacyViewState extends State<PrivacyView> {
           ),
           const SettingsDivider(),
           ListTile(
-            title: Text(context.lang.locationStickerSettingTitle),
-            subtitle: Text(context.lang.locationStickerSettingSubtitle),
-            onTap: _updatingLocationSticker ? null : toggleLocationSticker,
-            trailing: Switch.adaptive(
-              value: userService.currentUser.enableLocationSticker,
-              onChanged: _updatingLocationSticker
-                  ? null
-                  : (_) => toggleLocationSticker(),
-            ),
-          ),
-          ListTile(
             title: Text(context.lang.settingsTypingIndication),
-            subtitle: Text(context.lang.settingsTypingIndicationSubtitle),
+            subtitle: Text(
+              context.lang.settingsTypingIndicationSubtitle,
+              style: subtitleStyle,
+            ),
             onTap: toggleTypingIndicators,
             trailing: Switch.adaptive(
               value: userService.currentUser.typingIndicators,
@@ -142,9 +114,28 @@ class _PrivacyViewState extends State<PrivacyView> {
             ),
           ),
           const SettingsDivider(),
+          SettingsSectionTitle(context.lang.settingsPrivacyLocation),
+          ListTile(
+            title: Text(context.lang.locationFilterTitle),
+            subtitle: Text(
+              context.lang.locationFilterSubtitle,
+              style: subtitleStyle,
+            ),
+            onTap: _isUpdatingLocationSetting ? null : toggleLocationFilter,
+            trailing: Switch.adaptive(
+              value: userService.currentUser.locationFilter,
+              onChanged: _isUpdatingLocationSetting
+                  ? null
+                  : (_) => toggleLocationFilter(),
+            ),
+          ),
+          const SettingsDivider(),
           ListTile(
             title: Text(context.lang.settingsScreenLock),
-            subtitle: Text(context.lang.settingsScreenLockSubtitle),
+            subtitle: Text(
+              context.lang.settingsScreenLockSubtitle,
+              style: subtitleStyle,
+            ),
             onTap: toggleAuthRequirementOnStartup,
             trailing: Switch.adaptive(
               value: userService.currentUser.screenLockEnabled,

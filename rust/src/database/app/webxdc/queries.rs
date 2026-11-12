@@ -93,6 +93,25 @@ pub async fn app(
     .await?)
 }
 
+/// Every store entry this device holds, for the card cache. There are only a
+/// handful, a few KB of icons each, so the cards never have to wait on a read
+/// of their own.
+pub async fn apps(connection: &mut SqliteConnection) -> Result<Vec<WebxdcCardApp>> {
+    Ok(sqlx::query_as!(
+        WebxdcCardApp,
+        r#"
+            SELECT app_id AS "app_id!",
+                version AS "version!",
+                name AS "name!",
+                name_translations AS "name_translations!",
+                icon AS "icon?"
+            FROM webxdc_apps
+        "#,
+    )
+    .fetch_all(connection)
+    .await?)
+}
+
 pub async fn instance(
     connection: &mut SqliteConnection, id: &str,
 ) -> Result<Option<WebxdcCardInstance>> {

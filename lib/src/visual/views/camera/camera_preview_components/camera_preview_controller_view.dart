@@ -10,6 +10,7 @@ import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/permission_requests.dart';
 import 'package:twonly/src/services/subscription.service.dart';
@@ -174,17 +175,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     },
   );
   StreamSubscription<void>? _userUpdates;
-  late bool _storeLocationInMemories;
+  late bool _usesLocation;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _storeLocationInMemories = userService.currentUser.storeLocationInMemories;
+    _usesLocation = LocationMetadataService.usesLocation(
+      userService.currentUser,
+    );
     _userUpdates = userService.onUserUpdated.listen((_) {
-      final enabled = userService.currentUser.storeLocationInMemories;
-      final wasEnabled = _storeLocationInMemories;
-      _storeLocationInMemories = enabled;
+      final enabled = LocationMetadataService.usesLocation(
+        userService.currentUser,
+      );
+      final wasEnabled = _usesLocation;
+      _usesLocation = enabled;
       // The camera can remain mounted while settings are open, so enabling
       // location does not necessarily cause a visibility change.
       if (enabled && !wasEnabled) _prewarmMemoryLocation();

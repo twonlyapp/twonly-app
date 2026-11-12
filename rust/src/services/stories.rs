@@ -234,7 +234,7 @@ pub(crate) async fn release_media(
 ) -> Result<()> {
     for media_id in media_ids {
         let media = sqlx::query!(
-            r#"SELECT type AS media_type, stored, is_draft_media FROM media_files
+            r#"SELECT type AS media_type, stored, is_draft_media, cloud_state FROM media_files
                WHERE media_id = ?
                  AND NOT EXISTS (SELECT 1 FROM messages WHERE media_id = media_files.media_id)"#,
             media_id,
@@ -246,7 +246,8 @@ pub(crate) async fn release_media(
             continue;
         };
 
-        if media.stored != 0 || media.is_draft_media != 0 {
+        // A cloud-only memory has no local file but is still a memory.
+        if media.stored != 0 || media.is_draft_media != 0 || media.cloud_state == "uploaded" {
             continue;
         }
 

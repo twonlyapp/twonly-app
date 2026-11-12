@@ -194,12 +194,6 @@ class _ProfileViewState extends State<ProfileView> {
                 },
               ),
               BetterListTile(
-                icon: FontAwesomeIcons.shareFromSquare,
-                text: context.lang.inviteFriends,
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(Routes.settingsInvite),
-              ),
-              BetterListTile(
                 text: context.lang.yourTwonlyScore,
                 icon: FontAwesomeIcons.trophy,
                 trailing: Text(

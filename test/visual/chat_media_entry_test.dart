@@ -76,8 +76,6 @@ BubbleInfo buildInfo() => BubbleInfo()
   ..displayTime = false
   ..displayUserName = ''
   ..color = Colors.blue
-  ..expanded = false
-  ..spacerWidth = 0
   ..padding = EdgeInsets.zero
   ..minWidth = 0;
 

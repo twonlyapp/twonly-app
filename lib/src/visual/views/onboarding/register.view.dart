@@ -17,10 +17,14 @@ import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
-import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
+import 'package:twonly/src/visual/release_notes/release_notices.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+
+/// A proof of work solved ahead of time; `proof` is null when fetching the
+/// challenge failed.
+typedef PrefetchedProofOfWork = ({int? proof, bool registrationDisabled});
 
 class RegisterView extends StatefulWidget {
   const RegisterView({
@@ -30,7 +34,9 @@ class RegisterView extends StatefulWidget {
   });
 
   final Function callbackOnSuccess;
-  final (Future<int>?, bool) proofOfWork;
+
+  /// Started at app launch; may still be running, or may have failed.
+  final Future<PrefetchedProofOfWork>? proofOfWork;
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
@@ -45,13 +51,19 @@ class _RegisterViewState extends State<RegisterView> {
   bool _showProofOfWorkError = false;
   String? _usernameErrorText;
 
-  late Future<int>? proofOfWork;
+  late Future<PrefetchedProofOfWork>? proofOfWork;
 
   @override
   void initState() {
     super.initState();
-    proofOfWork = widget.proofOfWork.$1;
-    _registrationDisabled = widget.proofOfWork.$2;
+    proofOfWork = widget.proofOfWork;
+    unawaited(
+      proofOfWork?.then((prefetched) {
+        if (mounted && prefetched.registrationDisabled) {
+          setState(() => _registrationDisabled = true);
+        }
+      }),
+    );
   }
 
   Future<void> createNewUser({bool retryInvalidProofOfWork = true}) async {
@@ -72,8 +84,9 @@ class _RegisterViewState extends State<RegisterView> {
     try {
       late int proof;
 
-      if (proofOfWork != null) {
-        proof = await proofOfWork!;
+      final prefetched = (await proofOfWork)?.proof;
+      if (prefetched != null) {
+        proof = prefetched;
       } else {
         final proofResult = await rustApiResult(RustApi.getProofOfWork());
         final pow = proofResult.value;
@@ -181,7 +194,7 @@ class _RegisterViewState extends State<RegisterView> {
         appVersion: AppState.latestAppVersionId,
       );
       // These features are already part of the version this account starts on.
-      userData.lastReleaseNotesVersion = releaseNotes060Version;
+      userData.lastReleaseNotesVersion = latestReleaseNoticeVersion;
 
       await UserService.save(userData);
 

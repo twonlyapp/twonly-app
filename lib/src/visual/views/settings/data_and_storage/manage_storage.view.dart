@@ -87,7 +87,7 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                   if (isFreePlan) {
                     context.push(Routes.settingsSubscription);
                   } else {
-                    context.push(Routes.settingsBackup);
+                    context.push(Routes.settingsMemories);
                   }
                 },
                 borderRadius: BorderRadius.circular(12),

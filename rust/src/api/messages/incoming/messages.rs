@@ -4,6 +4,7 @@
  */
 
 use super::{handle_encrypted, Delivery};
+use crate::api::messages::send_backoff;
 use crate::api::proto::client::{self as proto};
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
@@ -360,6 +361,17 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
 
     let user = match Server::get_user_by_id(ctx, from_user_id).await? {
         ServerResult::Ok(u) => u,
+        // The server has no account with this ID, and IDs are never handed
+        // out again, so this sender's messages can never be opened. The server
+        // keeps a deleted account's sent messages, though, and a page of them
+        // left unacknowledged held back everything behind it in the mailbox.
+        ServerResult::ErrorCode(code)
+            if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 =>
+        {
+            return Err(TwonlyError::UnprocessableContent(format!(
+                "sender {from_user_id} has no account"
+            )));
+        }
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
                 "Failed to get user by id: {}",
@@ -738,6 +750,23 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
+    // The server refused envelopes for this contact a moment ago and would
+    // refuse this one too. It waits for the same retry as the rest of them.
+    {
+        let mut connection = app_db.pool.acquire().await?;
+
+        let now = chrono::Utc::now().timestamp();
+
+        if send_backoff::active_until(&mut connection, row.contact_id, now)
+            .await?
+            .is_some()
+        {
+            send_backoff::mark_waiting_messages(&mut connection, Some(row.contact_id), now).await?;
+
+            return Ok(());
+        }
+    }
+
     if !queued_media_is_sendable(
         &app_db.pool,
         receipt_id,
@@ -781,6 +810,28 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     .await?
     {
         ServerResult::Ok(()) => {}
+        // Not a failure: the envelope stays queued and goes out once the
+        // limit lifts. Until then nothing more is sent to this contact.
+        ServerResult::ErrorCode(code) if send_backoff::is_limit_error(code) => {
+            let mut connection = app_db.pool.acquire().await?;
+
+            let retry_at = send_backoff::record_refusal(
+                &mut connection,
+                receipt.contact_id,
+                chrono::Utc::now().timestamp(),
+            )
+            .await?;
+
+            tracing::info!(
+                receipt_id,
+                contact_id = receipt.contact_id,
+                code,
+                retry_in_seconds = retry_at - chrono::Utc::now().timestamp(),
+                "server sending limit reached; retrying later"
+            );
+
+            return Ok(());
+        }
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
                 "server rejected sender delivery receipt with code: {}",
@@ -817,11 +868,11 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         .execute(&mut *t)
         .await?;
 
-        // A parked message is shown as failed. If the peer became reachable
-        // after all, the delivery that just happened takes that back.
+        // A parked message is shown as failed, and one held back by a server
+        // limit as deferred. The delivery that just happened takes either back.
         sqlx::query!(
-            "DELETE FROM message_actions WHERE message_id = ? AND contact_id = ? AND type = \
-             'sendFailed'",
+            "DELETE FROM message_actions WHERE message_id = ? AND contact_id = ? AND type IN \
+             ('sendFailed', 'sendDeferred')",
             message_id,
             receipt.contact_id,
         )
@@ -839,6 +890,9 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         .execute(&mut *t)
         .await?;
     }
+
+    // The server takes envelopes for this contact again.
+    send_backoff::clear(&mut t, receipt.contact_id).await?;
 
     if receipt.contact_will_sends_receipt == 0 {
         // Terminal replies are deleted on success. A redelivered message may
@@ -982,7 +1036,20 @@ async fn flush_claimed_receipts(ctx: &Arc<Context>, guard: &mut FlushGuard<'_>) 
 async fn flush_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    let receipt_ids = due_receipt_ids(&database.pool, chrono::Utc::now().timestamp()).await?;
+    let now = chrono::Utc::now().timestamp();
+
+    // Messages queued for a contact in a backoff are skipped below, so they
+    // would keep a plain "sending" state. Mark them now; the read comes first so
+    // the common case, no backoff at all, writes nothing.
+    {
+        let mut connection = database.pool.acquire().await?;
+
+        if send_backoff::any_active(&mut connection, now).await? {
+            send_backoff::mark_waiting_messages(&mut connection, None, now).await?;
+        }
+    }
+
+    let receipt_ids = due_receipt_ids(&database.pool, now).await?;
 
     for receipt_id in receipt_ids {
         if let Err(error) = send_queued_receipt(ctx, &receipt_id).await {
@@ -1004,9 +1071,11 @@ async fn due_receipt_ids(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<String
           AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
           AND (ack_by_server_at IS NULL OR COALESCE(last_retry, ack_by_server_at) <= ?)
           AND mark_for_retry_after_accepted IS NULL
+          AND contact_id NOT IN (SELECT contact_id FROM contact_send_backoff WHERE retry_at > ?)
         ORDER BY created_at
         "#,
         retry_before,
+        now,
     )
     .fetch_all(pool)
     .await?;

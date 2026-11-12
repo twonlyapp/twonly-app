@@ -60,7 +60,9 @@ pub async fn cloud_only_count(
     connection: &mut SqliteConnection, directory: PathBuf,
 ) -> Result<i64> {
     let rows = sqlx::query!(
-        "SELECT media_id, type FROM media_files WHERE stored = 1 AND cloud_state = 'uploaded'",
+        // A memory removed from this device keeps its row through the cloud copy,
+        // and imports never had a local file, so `stored` is not required here.
+        "SELECT media_id, type FROM media_files WHERE cloud_state = 'uploaded'",
     )
     .fetch_all(connection)
     .await?;
@@ -83,9 +85,12 @@ pub async fn cloud_only_count(
 pub async fn finish_backup_disable(
     tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, directory: PathBuf,
 ) -> Result<i64> {
-    let rows = sqlx::query!("SELECT media_id, type FROM media_files WHERE stored = 1")
-        .fetch_all(&mut **tx)
-        .await?;
+    let rows = sqlx::query!(
+        // Same set as the gallery: kept memories plus cloud-only ones.
+        "SELECT media_id, type FROM media_files WHERE stored = 1 OR cloud_state = 'uploaded'"
+    )
+    .fetch_all(&mut **tx)
+    .await?;
 
     let missing =
         crate::database::lifecycle::spawn_blocking(move || -> Result<Vec<(String, String)>> {

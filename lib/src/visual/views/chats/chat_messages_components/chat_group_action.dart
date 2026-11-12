@@ -90,10 +90,12 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
     switch (widget.action.type) {
       case GroupActionType.changeDisplayMaxTime:
-        final time = formatDuration(
-          context,
-          (widget.action.newDeleteMessagesAfterMilliseconds ?? 0) ~/ 1000,
-        );
+        final seconds =
+            (widget.action.newDeleteMessagesAfterMilliseconds ?? 0) ~/ 1000;
+        // "nach ..." requires the dative ("nach 7 Tagen", not "nach 7 Tage").
+        final time = seconds >= 86400
+            ? context.lang.durationAfterDays(seconds ~/ 86400)
+            : formatDuration(context, seconds);
         text = (contact == null)
             ? context.lang.youChangedDisplayMaxTime(time)
             : context.lang.changeDisplayMaxTime(time, maker);
@@ -149,28 +151,40 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
     if (text.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Center(
-        child: RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            children: [
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: FaIcon(
-                  icon,
-                  size: 10,
+    // Styled like ChatDateChip so system notices read as one family.
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: context.color.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        margin: const EdgeInsets.only(top: 4, bottom: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              FaIcon(
+                icon,
+                size: 11,
+                color: context.color.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
                   color: context.color.onSurfaceVariant,
                 ),
               ),
-              const WidgetSpan(child: SizedBox(width: 8)),
-              TextSpan(
-                text: text,
-                style: TextStyle(color: context.color.onSurfaceVariant),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

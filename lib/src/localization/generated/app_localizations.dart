@@ -358,6 +358,12 @@ abstract class AppLocalizations {
   /// **'Type a message'**
   String get chatListDetailInput;
 
+  /// No description provided for @chatUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is no longer available.'**
+  String get chatUnavailable;
+
   /// No description provided for @userDeletedAccount.
   ///
   /// In en, this message translates to:
@@ -526,6 +532,18 @@ abstract class AppLocalizations {
   /// **'Storage & downloads'**
   String get settingsStorageData;
 
+  /// No description provided for @settingsMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get settingsMemories;
+
+  /// No description provided for @settingsMemoriesSectionSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get settingsMemoriesSectionSaving;
+
   /// No description provided for @memoryDetailsTitle.
   ///
   /// In en, this message translates to:
@@ -574,24 +592,6 @@ abstract class AppLocalizations {
   /// **'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.'**
   String get memoryLocationSubtitle;
 
-  /// No description provided for @locationStickerSettingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Location sticker'**
-  String get locationStickerSettingTitle;
-
-  /// No description provided for @locationStickerSettingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.'**
-  String get locationStickerSettingSubtitle;
-
-  /// No description provided for @locationStickerLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Finding your location…'**
-  String get locationStickerLoading;
-
   /// No description provided for @liveLocationMenu.
   ///
   /// In en, this message translates to:
@@ -631,7 +631,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveLocationMinutes.
   ///
   /// In en, this message translates to:
-  /// **'{count} minutes'**
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
   String liveLocationMinutes(int count);
 
   /// No description provided for @liveLocationHours.
@@ -639,6 +639,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
   String liveLocationHours(int count);
+
+  /// No description provided for @liveLocationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String liveLocationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @liveLocationCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get liveLocationCustom;
 
   /// No description provided for @liveLocationStart.
   ///
@@ -694,6 +706,36 @@ abstract class AppLocalizations {
   /// **'Last update: {time}'**
   String liveLocationLastUpdate(String time);
 
+  /// No description provided for @locationFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location filter'**
+  String get locationFilterTitle;
+
+  /// No description provided for @locationFilterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a camera filter with a map of where you are. Your location is sent only with media you send using this filter.'**
+  String get locationFilterSubtitle;
+
+  /// No description provided for @locationFilterSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get locationFilterSearching;
+
+  /// No description provided for @locationFilterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not found'**
+  String get locationFilterUnavailable;
+
+  /// No description provided for @photoLocationTakenAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Location at {time}'**
+  String photoLocationTakenAt(String time);
+
   /// No description provided for @memoryLocationPermissionDenied.
   ///
   /// In en, this message translates to:
@@ -703,8 +745,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageDataStoreInGTitle.
   ///
   /// In en, this message translates to:
-  /// **'Store in Gallery'**
+  /// **'Save copy to system gallery'**
   String get settingsStorageDataStoreInGTitle;
+
+  /// No description provided for @settingsStorageDataStoreInGSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Also keep saved memories in your device\'s gallery.'**
+  String get settingsStorageDataStoreInGSubtitle;
 
   /// No description provided for @settingsStorageDataMediaAutoDownload.
   ///
@@ -802,6 +850,12 @@ abstract class AppLocalizations {
   /// **'Blocked contacts'**
   String get settingsPrivacyBlockUsers;
 
+  /// No description provided for @settingsPrivacyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get settingsPrivacyLocation;
+
   /// No description provided for @settingsPrivacyBlockUsersDesc.
   ///
   /// In en, this message translates to:
@@ -897,6 +951,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open your phone’s settings to manage notification permissions.'**
   String get settingsNotifyPermissionDesc;
+
+  /// No description provided for @settingsNotifyPollTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for new messages periodically'**
+  String get settingsNotifyPollTitle;
+
+  /// No description provided for @settingsNotifyPollSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Without Google services, check for new messages about every {minutes} minutes when connected to the internet. Messages and notifications will be delayed.'**
+  String settingsNotifyPollSubtitle(int minutes);
+
+  /// No description provided for @settingsNotifyPollWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without Google services, twonly cannot receive instant push notifications. It will check for new messages about every {minutes} minutes when internet is available. Messages and notifications will be delayed. When your phone is idle or limits background activity, checks can take several hours.'**
+  String settingsNotifyPollWarning(int minutes);
+
+  /// No description provided for @settingsNotifyPollBatteryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization'**
+  String get settingsNotifyPollBatteryTitle;
+
+  /// No description provided for @settingsNotifyPollBatteryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'For more reliable checks, disable battery optimization for twonly. In the system list, choose All apps if needed, find twonly, and select Don’t optimize. Android may still delay checks.'**
+  String get settingsNotifyPollBatteryHelp;
+
+  /// No description provided for @settingsNotifyPollBatteryActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization: active'**
+  String get settingsNotifyPollBatteryActive;
+
+  /// No description provided for @settingsNotifyPollBatteryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization: disabled'**
+  String get settingsNotifyPollBatteryDisabled;
+
+  /// No description provided for @settingsNotifyPollRestrictedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background activity is restricted'**
+  String get settingsNotifyPollRestrictedTitle;
+
+  /// No description provided for @settingsNotifyPollRestrictedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Android is blocking background checks. Open twonly’s app settings and allow background battery usage.'**
+  String get settingsNotifyPollRestrictedHelp;
+
+  /// No description provided for @settingsNotifyPollOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get settingsNotifyPollOpenSettings;
+
+  /// No description provided for @settingsNotifyPollLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get settingsNotifyPollLater;
 
   /// No description provided for @settingsNotifyResetTitle.
   ///
@@ -1678,6 +1798,12 @@ abstract class AppLocalizations {
   /// **'Delete for all'**
   String get deleteOkBtnForAll;
 
+  /// No description provided for @memoriesRemovedLocallySnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Removed from this device, still backed up in the cloud} other {Removed {count} items from this device, still backed up in the cloud}}'**
+  String memoriesRemovedLocallySnackbar(num count);
+
   /// No description provided for @memoriesDeleteSnackbarSuccess.
   ///
   /// In en, this message translates to:
@@ -2139,6 +2265,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 Day} other{{count} Days}}'**
   String durationShortDays(num count);
+
+  /// No description provided for @durationAfterDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String durationAfterDays(num count);
 
   /// No description provided for @contacts.
   ///
@@ -2764,6 +2896,12 @@ abstract class AppLocalizations {
   /// **'The photo avatar could not be created.'**
   String get customAvatarCreateFailed;
 
+  /// No description provided for @customAvatarSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as avatar'**
+  String get customAvatarSave;
+
   /// No description provided for @inProcess.
   ///
   /// In en, this message translates to:
@@ -3129,6 +3267,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{months} months ago'**
   String memoriesXMonthsAgo(int months);
+
+  /// No description provided for @memoriesFlashbackJumpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to'**
+  String get memoriesFlashbackJumpTo;
 
   /// No description provided for @migrationOfMemories.
   ///
@@ -4102,24 +4246,6 @@ abstract class AppLocalizations {
   /// **'Failed to load assets: {error}'**
   String importGalleryLoadError(Object error);
 
-  /// No description provided for @importGalleryImportingOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing {current} of {total}...'**
-  String importGalleryImportingOf(Object current, Object total);
-
-  /// No description provided for @importGalleryStarting.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting import...'**
-  String get importGalleryStarting;
-
-  /// No description provided for @importGalleryComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Import complete: {imported} successfully imported and {failed} failed.'**
-  String importGalleryComplete(Object imported, Object failed);
-
   /// No description provided for @importGalleryGrantAccess.
   ///
   /// In en, this message translates to:
@@ -4180,22 +4306,82 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get importGalleryRefresh;
 
-  /// No description provided for @importGallerySelectToImport.
-  ///
-  /// In en, this message translates to:
-  /// **'Select items to import'**
-  String get importGallerySelectToImport;
-
   /// No description provided for @importGalleryImportCount.
   ///
   /// In en, this message translates to:
   /// **'{count, plural, =1{Import 1 item} other{Import {count} items}}'**
   String importGalleryImportCount(num count);
 
+  /// No description provided for @importGalleryProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing your memories'**
+  String get importGalleryProgressTitle;
+
+  /// No description provided for @importGalleryProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep twonly open until the import is finished.'**
+  String get importGalleryProgressHint;
+
+  /// No description provided for @importGalleryProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String importGalleryProgressCount(int done, int total);
+
+  /// No description provided for @importGalleryStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop import'**
+  String get importGalleryStop;
+
+  /// No description provided for @importGalleryStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get importGalleryStopping;
+
+  /// No description provided for @importGalleryDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import complete'**
+  String get importGalleryDoneTitle;
+
+  /// No description provided for @importGalleryStoppedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import stopped'**
+  String get importGalleryStoppedTitle;
+
+  /// No description provided for @importGalleryImportedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get importGalleryImportedLabel;
+
+  /// No description provided for @importGalleryFailedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get importGalleryFailedLabel;
+
+  /// No description provided for @importGalleryRemainingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get importGalleryRemainingLabel;
+
+  /// No description provided for @importGalleryDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get importGalleryDone;
+
   /// No description provided for @emptyChatListTitle.
   ///
   /// In en, this message translates to:
-  /// **'Find your first friend'**
+  /// **'Find your friends'**
   String get emptyChatListTitle;
 
   /// No description provided for @emptyChatListDesc.
@@ -4768,17 +4954,65 @@ abstract class AppLocalizations {
   /// **'Memories Backup'**
   String get memoriesBackupTitle;
 
+  /// No description provided for @memoriesBackupUsageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {max}'**
+  String memoriesBackupUsageOf(String max);
+
+  /// No description provided for @memoriesBackupCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 memory in the cloud} other {{count} memories in the cloud}}'**
+  String memoriesBackupCount(int count);
+
+  /// No description provided for @memoriesBackupPercentUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String memoriesBackupPercentUsed(String percent);
+
+  /// No description provided for @memoriesBackupUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {current} of {total}'**
+  String memoriesBackupUploading(int current, int total);
+
+  /// No description provided for @memoriesBackupDisableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes your backed up memories from the cloud.'**
+  String get memoriesBackupDisableSubtitle;
+
   /// No description provided for @settingsHelpNews.
   ///
   /// In en, this message translates to:
   /// **'News'**
   String get settingsHelpNews;
 
+  /// No description provided for @settingsStorageDeleteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete locally'**
+  String get settingsStorageDeleteLocal;
+
+  /// No description provided for @settingsStorageDeleteCompletely.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completely'**
+  String get settingsStorageDeleteCompletely;
+
   /// No description provided for @settingsStorageContents.
   ///
   /// In en, this message translates to:
   /// **'Free up space'**
   String get settingsStorageContents;
+
+  /// No description provided for @settingsStorageFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get settingsStorageFilterAll;
 
   /// No description provided for @settingsStorageSortStorage.
   ///
@@ -4917,6 +5151,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create contact group'**
   String get createContactGroup;
+
+  /// No description provided for @createShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Create shortcut'**
+  String get createShortcut;
 
   /// No description provided for @editContactGroup.
   ///
@@ -5572,6 +5812,48 @@ abstract class AppLocalizations {
   /// **'The sticker could not be rotated.'**
   String get stickerRotateFailed;
 
+  /// No description provided for @stickerDraftRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get stickerDraftRotate;
+
+  /// No description provided for @stickerDraftErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get stickerDraftErase;
+
+  /// No description provided for @stickerEraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase parts'**
+  String get stickerEraseTitle;
+
+  /// No description provided for @stickerEraseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paint over everything you want to remove.'**
+  String get stickerEraseHint;
+
+  /// No description provided for @stickerEraseBrushSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush size'**
+  String get stickerEraseBrushSize;
+
+  /// No description provided for @stickerEraseApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get stickerEraseApply;
+
+  /// No description provided for @stickerEraseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The changes could not be applied. Make sure part of the image is left.'**
+  String get stickerEraseFailed;
+
   /// No description provided for @releaseNotesTitle.
   ///
   /// In en, this message translates to:
@@ -5715,6 +5997,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User inactive'**
   String get messageSendFailedUserInactive;
+
+  /// No description provided for @messageSendDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending later'**
+  String get messageSendDeferred;
+
+  /// No description provided for @messageSendDeferredExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is holding this message back for now, usually because the recipient hasn\'t fetched your earlier messages yet. twonly sends it automatically later.'**
+  String get messageSendDeferredExplanation;
 
   /// No description provided for @mailboxSyncTitle.
   ///
@@ -5899,7 +6193,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNewsShortcut.
   ///
   /// In en, this message translates to:
-  /// **'Show news shortcut'**
+  /// **'Always hide news icon'**
   String get settingsNewsShortcut;
 
   /// No description provided for @settingsDownloadNone.
@@ -6141,6 +6435,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Camera'**
   String get settingsChatsSectionCamera;
+
+  /// No description provided for @memoryImporterConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect importer'**
+  String get memoryImporterConnectTitle;
+
+  /// No description provided for @memoryImporterConnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser session can only add new memories to your account. It can never access your existing uploads.'**
+  String get memoryImporterConnectBody;
+
+  /// No description provided for @memoryImporterConnectWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Only connect if you opened {origin} yourself. twonly never asks you to scan a code for support, a reward or a verification.'**
+  String memoryImporterConnectWarning(String origin);
+
+  /// No description provided for @memoryImporterConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get memoryImporterConnect;
+
+  /// No description provided for @memoryImporterConnectIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect ({seconds})'**
+  String memoryImporterConnectIn(int seconds);
+
+  /// No description provided for @memoryImporterConnectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get memoryImporterConnectedTitle;
+
+  /// No description provided for @memoryImporterConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.'**
+  String get memoryImporterConnected;
+
+  /// No description provided for @memoryImporterConnectedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it, continue on my computer'**
+  String get memoryImporterConnectedDone;
+
+  /// No description provided for @memoryImporterAlreadyClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.'**
+  String get memoryImporterAlreadyClaimed;
+
+  /// No description provided for @memoryImporterCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired. Reload the import page and scan the new code.'**
+  String get memoryImporterCodeExpired;
+
+  /// No description provided for @memoryImporterTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Three importers are already connected. Remove one in Settings → Memories → Import from other apps.'**
+  String get memoryImporterTooMany;
+
+  /// No description provided for @memoryImporterNeedsPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing memories needs a plan with memories storage.'**
+  String get memoryImporterNeedsPlan;
+
+  /// No description provided for @memoryImporterRequiresPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires a subscription'**
+  String get memoryImporterRequiresPlanTitle;
+
+  /// No description provided for @memoryImporterRequiresPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported memories are stored in your Memories Backup, which is part of the paid plans. Upgrade to connect an importer.'**
+  String get memoryImporterRequiresPlan;
+
+  /// No description provided for @memoryImporterUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get memoryImporterUpgrade;
+
+  /// No description provided for @memoryImporterRequiresBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Memories Backup'**
+  String get memoryImporterRequiresBackupTitle;
+
+  /// No description provided for @memoryImporterRequiresBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported memories are stored in your Memories Backup. Turn it on to connect an importer.'**
+  String get memoryImporterRequiresBackup;
+
+  /// No description provided for @memoryImporterEnableBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Memories Backup'**
+  String get memoryImporterEnableBackup;
+
+  /// No description provided for @memoryImporterConnectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The importer could not be connected. Check your connection and try again.'**
+  String get memoryImporterConnectFailed;
+
+  /// No description provided for @memoryImporterScanOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the twonly camera'**
+  String get memoryImporterScanOnlyTitle;
+
+  /// No description provided for @memoryImporterScanOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.'**
+  String get memoryImporterScanOnly;
+
+  /// No description provided for @memoryImporterHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories from Snapchat and other apps: open {origin} on your computer and scan the code shown there with the twonly camera.'**
+  String memoryImporterHowTo(String origin);
+
+  /// No description provided for @memoryImporterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories'**
+  String get memoryImporterTitle;
+
+  /// No description provided for @memoryImporterFromOtherApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from other apps'**
+  String get memoryImporterFromOtherApps;
+
+  /// No description provided for @memoryImporterOpenPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {origin}'**
+  String memoryImporterOpenPage(String origin);
+
+  /// No description provided for @memoryImporterNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing uploaded yet'**
+  String get memoryImporterNothingYet;
+
+  /// No description provided for @memoryImporterActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That did not work. Check your connection and try again.'**
+  String get memoryImporterActionFailed;
+
+  /// No description provided for @memoryImporterSectionConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected importers'**
+  String get memoryImporterSectionConnected;
+
+  /// No description provided for @memoryImporterSectionPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed imports'**
+  String get memoryImporterSectionPast;
+
+  /// No description provided for @memoryImporterUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} memories, {size}'**
+  String memoryImporterUploaded(int count, String size);
+
+  /// No description provided for @memoryImporterActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected until {date}'**
+  String memoryImporterActiveUntil(String date);
+
+  /// No description provided for @memoryImporterRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get memoryImporterRemove;
+
+  /// No description provided for @memoryImporterRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this importer?'**
+  String get memoryImporterRemoveTitle;
+
+  /// No description provided for @memoryImporterRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.'**
+  String get memoryImporterRemoveBody;
+
+  /// No description provided for @memoryImporterRemoveKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and keep its memories'**
+  String get memoryImporterRemoveKeep;
+
+  /// No description provided for @memoryImporterRemoveDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and delete everything it uploaded'**
+  String get memoryImporterRemoveDelete;
+
+  /// No description provided for @memoryImporterPastSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} memories · {range}'**
+  String memoryImporterPastSummary(int count, String range);
+
+  /// No description provided for @memoryImporterDeleteImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything from this import'**
+  String get memoryImporterDeleteImport;
+
+  /// No description provided for @memoryImporterDeleteImportConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} memories from this import from all your devices and the cloud? This cannot be undone.'**
+  String memoryImporterDeleteImportConfirm(int count);
+
+  /// No description provided for @memoryImporterUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} imported items could not be read'**
+  String memoryImporterUnreadable(int count);
+
+  /// No description provided for @memoryImporterUnreadableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They were not added to your gallery but still use storage. Delete them to free the space.'**
+  String get memoryImporterUnreadableBody;
+
+  /// No description provided for @memoryImporterDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get memoryImporterDelete;
+
+  /// No description provided for @memoryImportProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing memories'**
+  String get memoryImportProgressTitle;
+
+  /// No description provided for @memoryImportProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String memoryImportProgressCount(int done, int total);
+
+  /// No description provided for @memoryImportProgressAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 added} other{{count} added}}'**
+  String memoryImportProgressAdded(int count);
 }
 
 class _AppLocalizationsDelegate

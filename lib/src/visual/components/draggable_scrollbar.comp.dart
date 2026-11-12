@@ -10,9 +10,14 @@ class DraggableScrollbar extends StatefulWidget {
     required this.controller,
     required this.child,
     this.labelBuilder,
+    this.topPadding = 0,
     super.key,
   });
   final ScrollController controller;
+
+  /// Space above the scrollbar track (below the SafeArea), e.g. to keep the
+  /// thumb clear of an app bar's action buttons.
+  final double topPadding;
   final Widget child;
   final String? Function(double scrollOffset)? labelBuilder;
 
@@ -91,133 +96,139 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
           ),
           // Scrollbar layer restricted to SafeArea
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxThumbOffset = constraints.maxHeight - thumbHeight;
+            child: Padding(
+              padding: EdgeInsets.only(top: widget.topPadding),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxThumbOffset = constraints.maxHeight - thumbHeight;
 
-                return ExcludeSemantics(
-                  child: RepaintBoundary(
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _thumbOffsetNotifier,
-                      builder: (context, thumbOffset, child) {
-                        final colors = context.color;
-                        final handleColor = colors.surfaceContainerLowest;
-                        final iconColor = colors.onSurfaceVariant;
+                  return ExcludeSemantics(
+                    child: RepaintBoundary(
+                      child: ValueListenableBuilder<double>(
+                        valueListenable: _thumbOffsetNotifier,
+                        builder: (context, thumbOffset, child) {
+                          final colors = context.color;
+                          final handleColor = colors.surfaceContainerLowest;
+                          final iconColor = colors.onSurfaceVariant;
 
-                        final label = widget.labelBuilder?.call(
-                          _viewOffsetNotifier.value,
-                        );
+                          final label = widget.labelBuilder?.call(
+                            _viewOffsetNotifier.value,
+                          );
 
-                        return Container(
-                          alignment: AlignmentDirectional.topEnd,
-                          padding: EdgeInsets.only(top: thumbOffset),
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onVerticalDragStart: (_) => _onVerticalDragStart(),
-                            onVerticalDragUpdate: (details) =>
-                                _onVerticalDragUpdate(
-                                  details.delta.dy,
-                                  maxThumbOffset,
-                                ),
-                            onVerticalDragEnd: (_) => _onVerticalDragEnd(),
-                            child: SlideFadeTransition(
-                              animation: _thumbAnimation,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (label != null && _isDragInProcess)
-                                    FadeTransition(
-                                      opacity: _labelAnimation,
-                                      child: ScaleTransition(
-                                        scale: _labelAnimation,
-                                        child: Container(
-                                          margin: const EdgeInsets.only(
-                                            right: DraggableScrollbar
-                                                .labelThumbPadding,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 6,
-                                            horizontal: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.surfaceContainerHigh
-                                                .withValues(alpha: 0.95),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: colors.shadow.withValues(
-                                                  alpha: 0.2,
-                                                ),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Text(
-                                            label,
-                                            style: TextStyle(
-                                              color: colors.onSurface,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  Container(
-                                    width: DraggableScrollbar.thumbWidth,
-                                    height: thumbHeight,
-                                    decoration: BoxDecoration(
-                                      color: handleColor,
-                                      border: Border.all(
-                                        color: colors.outlineVariant,
-                                        width: 0.5,
-                                      ),
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(8),
-                                        bottomLeft: Radius.circular(8),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 4,
-                                          ),
-                                          child: FaIcon(
-                                            FontAwesomeIcons.angleUp,
-                                            size: 14,
-                                            color: iconColor,
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 4,
-                                          ),
-                                          child: FaIcon(
-                                            FontAwesomeIcons.angleDown,
-                                            size: 14,
-                                            color: iconColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                          return Container(
+                            alignment: AlignmentDirectional.topEnd,
+                            padding: EdgeInsets.only(top: thumbOffset),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onVerticalDragStart: (_) =>
+                                  _onVerticalDragStart(),
+                              onVerticalDragUpdate: (details) =>
+                                  _onVerticalDragUpdate(
+                                    details.delta.dy,
+                                    maxThumbOffset,
                                   ),
-                                ],
+                              onVerticalDragEnd: (_) => _onVerticalDragEnd(),
+                              child: SlideFadeTransition(
+                                animation: _thumbAnimation,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (label != null && _isDragInProcess)
+                                      FadeTransition(
+                                        opacity: _labelAnimation,
+                                        child: ScaleTransition(
+                                          scale: _labelAnimation,
+                                          child: Container(
+                                            margin: const EdgeInsets.only(
+                                              right: DraggableScrollbar
+                                                  .labelThumbPadding,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                              horizontal: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colors.surfaceContainerHigh
+                                                  .withValues(alpha: 0.95),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    8,
+                                                  ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: colors.shadow
+                                                      .withValues(
+                                                        alpha: 0.2,
+                                                      ),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Text(
+                                              label,
+                                              style: TextStyle(
+                                                color: colors.onSurface,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    Container(
+                                      width: DraggableScrollbar.thumbWidth,
+                                      height: thumbHeight,
+                                      decoration: BoxDecoration(
+                                        color: handleColor,
+                                        border: Border.all(
+                                          color: colors.outlineVariant,
+                                          width: 0.5,
+                                        ),
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(8),
+                                          bottomLeft: Radius.circular(8),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
+                                            child: FaIcon(
+                                              FontAwesomeIcons.angleUp,
+                                              size: 14,
+                                              color: iconColor,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 4,
+                                            ),
+                                            child: FaIcon(
+                                              FontAwesomeIcons.angleDown,
+                                              size: 14,
+                                              color: iconColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -241,7 +252,8 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
 
           // Subtract SafeArea top/bottom
           final padding = MediaQuery.paddingOf(context);
-          final availableHeight = renderBox.size.height - padding.vertical;
+          final availableHeight =
+              renderBox.size.height - padding.vertical - widget.topPadding;
           final maxThumbOffset = availableHeight - thumbHeight;
 
           final scrollExtent =

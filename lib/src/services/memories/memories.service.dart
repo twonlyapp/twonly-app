@@ -7,6 +7,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
+import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
@@ -108,11 +109,17 @@ class MemoriesService {
       if (media.storedPath.existsSync()) {
         await media.storedPath.delete();
       }
-      // The gallery watches database state, so deleting a file alone leaves
-      // a stale tile behind, including when the file was already missing.
+      // With a cloud copy it stays a memory: `stored` means the user kept it,
+      // and a stored row whose file is gone is what makes it cloud only.
+      // Clearing the flag would let story cleanup delete the row and hide it
+      // from the cloud-only count. Without a cloud copy nothing is left to
+      // keep. Either way the write fires the watchers, so the gallery picks
+      // up the missing file.
       await rust_mediafiles.updateMediaFiles(
         id: file.mediaId,
-        patch: const MediaFilePatch(stored: false),
+        patch: MediaFilePatch(
+          stored: file.cloudState == CloudState.uploaded,
+        ),
         transaction: currentDatabaseSession(),
       );
     }
@@ -151,6 +158,40 @@ class MemoriesService {
   Timer? _recomputeThrottle;
   DateTime? _lastRecomputeAt;
   List<MediaFile>? _pendingMediaFiles;
+  bool _processingMediaFiles = false;
+  bool _disposed = false;
+  final _cancelSnapshotReads = <void Function()>{};
+
+  /// Watches wait through native pool suspension/reopen. A command can instead
+  /// be interrupted after acquiring its transaction when the app backgrounds.
+  Future<T?> _readSnapshot<T>(
+    Stream<T> Function(DatabaseWatch) create,
+  ) async {
+    if (_disposed) return null;
+    final result = Completer<T?>();
+    final subscription = watchRustDatabase(create).listen(
+      (value) {
+        if (!result.isCompleted) result.complete(value);
+      },
+      onError: (Object error, StackTrace stack) {
+        if (!result.isCompleted) result.completeError(error, stack);
+      },
+      onDone: () {
+        if (!result.isCompleted) result.complete(null);
+      },
+    );
+    void cancel() {
+      if (!result.isCompleted) result.complete(null);
+    }
+
+    _cancelSnapshotReads.add(cancel);
+    try {
+      return await result.future;
+    } finally {
+      _cancelSnapshotReads.remove(cancel);
+      await subscription.cancel();
+    }
+  }
 
   /// Instantly pre-warms the gallery state from disk cache during app loading
   static Future<void> prewarmCache() async {
@@ -264,8 +305,10 @@ class MemoriesService {
 
   Future<void> _initAsync() async {
     try {
+      if (_disposed) return;
       // Start DB subscription first so files with existing thumbnails are shown immediately.
       await _dbSubscription?.cancel();
+      if (_disposed) return;
       _dbSubscription =
           watchRustDatabase(
             (control) => rust_mediafiles
@@ -287,6 +330,7 @@ class MemoriesService {
         transaction: currentDatabaseSession(),
       );
 
+      if (_disposed) return;
       if (pendingFiles.isNotEmpty) {
         _currentState = _currentState.copyWith(
           filesToMigrate: pendingFiles.length,
@@ -398,8 +442,17 @@ class MemoriesService {
   /// Collapses a burst of row changes into one recompute, always running the
   /// most recent batch so nothing is dropped.
   void _onMediaFilesChanged(List<MediaFile> mediaFiles) {
+    if (_disposed) return;
     _pendingMediaFiles = mediaFiles;
-    if (_recomputeThrottle?.isActive ?? false) return;
+    _scheduleRecompute();
+  }
+
+  void _scheduleRecompute() {
+    if (_disposed ||
+        _processingMediaFiles ||
+        (_recomputeThrottle?.isActive ?? false)) {
+      return;
+    }
 
     final since = _lastRecomputeAt == null
         ? null
@@ -413,28 +466,44 @@ class MemoriesService {
       _pendingMediaFiles = null;
       if (pending == null) return;
       _lastRecomputeAt = clock.now();
-      unawaited(_processMediaFilesStream(pending));
+      _processingMediaFiles = true;
+      unawaited(
+        _processMediaFilesStream(pending).whenComplete(() {
+          _processingMediaFiles = false;
+          if (_pendingMediaFiles != null) _scheduleRecompute();
+        }),
+      );
     });
   }
 
   Future<void> _processMediaFilesStream(List<MediaFile> mediaFiles) async {
     try {
       final mediaIds = mediaFiles.map((m) => m.mediaId).toList();
-      final allMessages = await rust_messages.listMessages(
-        input: db_messages.MessageQuery(
-          filter: db_messages.MessageFilter.mediaIds,
-          ids: mediaIds.toList(),
-          nowMs: clock.now().millisecondsSinceEpoch,
+      final allMessages = await _readSnapshot(
+        (control) => rust_messages.watchMessages(
+          input: db_messages.MessageQuery(
+            filter: db_messages.MessageFilter.mediaIds,
+            ids: mediaIds.toList(),
+            nowMs: clock.now().millisecondsSinceEpoch,
+          ),
+          control: control,
         ),
-        transaction: currentDatabaseSession(),
       );
-      final allContacts = await rust_contacts.listContacts(
-        input: db_contacts.ContactQuery(
-          filter: db_contacts.ContactFilter.all,
-          ids: Int64List(0),
+      if (_disposed || allMessages == null || _pendingMediaFiles != null) {
+        return;
+      }
+      final allContacts = await _readSnapshot(
+        (control) => rust_contacts.watchContacts(
+          input: db_contacts.ContactQuery(
+            filter: db_contacts.ContactFilter.all,
+            ids: Int64List(0),
+          ),
+          control: control,
         ),
-        transaction: currentDatabaseSession(),
       );
+      if (_disposed || allContacts == null || _pendingMediaFiles != null) {
+        return;
+      }
 
       final contactMap = {for (final c in allContacts) c.userId: c};
       final mediaIdToSenderContact = <String, Contact>{};
@@ -477,8 +546,13 @@ class MemoriesService {
           )
           .toList();
       unawaited(KeyValueStore.put('memories_cache', {'items': cacheList}));
-    } catch (e) {
-      Log.error('Error processing media files stream in MemoriesService: $e');
+    } catch (error, stackTrace) {
+      if (_disposed) return;
+      Log.error(
+        'Error processing media files stream in MemoriesService',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -499,6 +573,10 @@ class MemoriesService {
   }
 
   void dispose() {
+    _disposed = true;
+    for (final cancel in _cancelSnapshotReads.toList()) {
+      cancel();
+    }
     _recomputeThrottle?.cancel();
     _dbSubscription?.cancel();
     _stateController.close();

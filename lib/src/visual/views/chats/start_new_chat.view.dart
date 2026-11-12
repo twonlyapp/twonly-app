@@ -26,7 +26,6 @@ import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
-import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 class StartNewChatView extends StatefulWidget {
   const StartNewChatView({super.key});
@@ -152,25 +151,19 @@ class _StartNewChatView extends State<StartNewChatView> {
           )
           .then((rows) => rows.isEmpty ? null : rows.single);
     }
-    if (!mounted) return;
-    await Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return ChatMessagesView(directChat!.groupId);
-        },
-      ),
-    );
+    if (!mounted || directChat == null) return;
+    _openChat(directChat);
   }
 
-  Future<void> _onTapGroup(Group group) async {
-    await Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return ChatMessagesView(group.groupId);
-        },
-      ),
+  void _onTapGroup(Group group) => _openChat(group);
+
+  // Goes through go_router so its route stack drops this screen too. A plain
+  // Navigator.pushReplacement left start_new_chat in go_router's matches, and
+  // the next go_router push rebuilt it on top of the stack.
+  void _openChat(Group group) {
+    context.pushReplacement(
+      Routes.chatsMessages(group.groupId),
+      extra: group,
     );
   }
 

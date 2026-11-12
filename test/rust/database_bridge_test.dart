@@ -104,24 +104,34 @@ void main() {
           await rust_database.refreshDatabaseWatches();
           final items = [
             for (var i = 0; i < 13; i++)
-              MockGalleryItem(createdAt: 1700000000 + i, month: 'Januar 2024'),
+              MockGalleryItem(
+                mediaId: 'mock_gen_$i',
+                createdAt: 1700000000 + i,
+                month: 'Januar 2024',
+              ),
           ];
           await rust_diagnostics.seedMockGallery(
             items: items,
-            openedAt: 1700000100,
             transaction: session,
           );
           await rust_diagnostics.seedMockGallery(
             items: items,
-            openedAt: 1700000100,
             transaction: session,
           );
-          expect(
-            (await rust_messages.getMessage(
-              id: 'mock_msg_0',
-              transaction: currentDatabaseSession(),
-            ))!.senderId,
-            9000000,
+          // Mock memories are stored images only, without a chat around them.
+          final seeded = await database
+              .customSelect(
+                "SELECT (SELECT COUNT(*) FROM media_files WHERE stored = 1 AND media_id GLOB 'mock_gen_*') AS media, "
+                '(SELECT COUNT(*) FROM messages) AS messages',
+              )
+              .getSingle();
+          expect(seeded.read<int>('media'), 13);
+          expect(seeded.read<int>('messages'), 0);
+          await database.customStatement(
+            "INSERT INTO groups(group_id,group_name,is_direct_chat,joined_group) VALUES ('mock_group_gallery','Mock Gallery Group',0,1)",
+          );
+          await database.customStatement(
+            "INSERT INTO contacts(user_id,username) VALUES (9000000,'mock_user_0')",
           );
           await database.customStatement(
             "INSERT INTO group_members(group_id,contact_id) VALUES ('mock_group_gallery',9000000)",

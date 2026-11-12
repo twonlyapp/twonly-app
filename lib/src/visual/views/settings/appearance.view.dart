@@ -316,9 +316,9 @@ class _AppearanceViewState extends State<AppearanceView> {
               ),
               SwitchListTile.adaptive(
                 title: Text(context.lang.settingsNewsShortcut),
-                value: userService.currentUser.showNewsShortcut,
+                value: !userService.currentUser.showNewsShortcut,
                 onChanged: (value) => UserService.update(
-                  (user) => user.showNewsShortcut = value,
+                  (user) => user.showNewsShortcut = !value,
                 ),
               ),
             ],

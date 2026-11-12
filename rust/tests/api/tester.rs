@@ -136,11 +136,13 @@ impl Tester {
     pub async fn is_contact_verified(&self, contact_id: i64) -> anyhow::Result<bool> {
         let database = self.context.app_db.read().await.clone();
 
-        Ok(rust_lib_twonly::database::app::key_verifications::queries::is_verified(
-            &mut *database.pool.acquire().await?,
-            contact_id,
+        Ok(
+            rust_lib_twonly::database::app::key_verifications::queries::is_verified(
+                &mut *database.pool.acquire().await?,
+                contact_id,
+            )
+            .await?,
         )
-        .await?)
     }
 
     pub async fn wait_for_contact_state(

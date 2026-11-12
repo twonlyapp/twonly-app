@@ -38,37 +38,64 @@ class ReleaseNotesData {
   final List<String> additionalChanges;
 }
 
-/// Coordinates the once-per-version behavior for any release note.
+/// A sheet that announces what is new and is shown once per account.
+@immutable
+class ReleaseNotice {
+  const ReleaseNotice({required this.version, required this.show});
+
+  /// Stored in `lastReleaseNotesVersion` once the notice was shown.
+  final String version;
+  final Future<void> Function(BuildContext context) show;
+}
+
+/// Coordinates the once-per-version behavior for release notes and feature
+/// notices: the oldest unseen notice is shown, at most one per app start.
 class ReleaseNotesPresenter {
   ReleaseNotesPresenter._();
 
-  static final Set<String> _showingVersions = {};
-  static final Set<String> _shownThisSession = {};
+  static bool _showing = false;
+  static bool _shownThisSession = false;
 
-  /// Returns whether the release notes are on screen or were just shown.
+  static bool isSeen(String version) {
+    final last = userService.currentUser.lastReleaseNotesVersion;
+    return last != null && compareVersions(last, version) >= 0;
+  }
+
+  /// Returns whether a notice is on screen or was just shown.
   static Future<bool> showIfNeeded(
     BuildContext context,
-    ReleaseNotesData releaseNotes,
+    List<ReleaseNotice> notices,
   ) async {
-    final version = releaseNotes.version;
-    if (_showingVersions.contains(version)) return true;
-    if (_shownThisSession.contains(version) ||
-        userService.currentUser.lastReleaseNotesVersion == version) {
-      return false;
-    }
+    if (_showing) return true;
+    if (_shownThisSession) return false;
+    final notice = notices.where((n) => !isSeen(n.version)).firstOrNull;
+    if (notice == null) return false;
 
-    _showingVersions.add(version);
+    _showing = true;
     try {
-      await showReleaseNotesBottomSheet(context, releaseNotes);
-      _shownThisSession.add(version);
+      await notice.show(context);
+      _shownThisSession = true;
       await UserService.update(
-        (user) => user.lastReleaseNotesVersion = version,
+        (user) => user.lastReleaseNotesVersion = notice.version,
       );
     } finally {
-      _showingVersions.remove(version);
+      _showing = false;
     }
     return true;
   }
+}
+
+/// Compares dotted version numbers like `0.6.0` and `0.7.1` numerically.
+int compareVersions(String a, String b) {
+  List<int> parts(String v) =>
+      v.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+  final pa = parts(a);
+  final pb = parts(b);
+  for (var i = 0; i < pa.length || i < pb.length; i++) {
+    final diff = (i < pa.length ? pa[i] : 0) - (i < pb.length ? pb[i] : 0);
+    if (diff != 0) return diff;
+  }
+  return 0;
 }
 
 Future<void> showReleaseNotesBottomSheet(

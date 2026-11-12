@@ -15,6 +15,7 @@ import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -492,7 +493,11 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   }
 
   Future<void> _registerPasswordlessNotification(OnboardingState state) async {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
+    // Without Play Services getToken throws and recovery could never register;
+    // the server accepts a missing token and the view polls instead.
+    final fcmToken = await FcmNotificationService.isAvailable()
+        ? await FirebaseMessaging.instance.getToken()
+        : null;
     if (!mounted) return;
     final res = await rustApiResult(
       RustApi.registerPasswordlessNotification(

@@ -15,4 +15,5 @@ enum MessageActionType {
   ackByUserAt,
   ackByServerAt,
   sendFailed,
+  sendDeferred,
 }

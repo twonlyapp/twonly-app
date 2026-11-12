@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO message_actions(message_id, contact_id, type)\n           SELECT r.message_id, r.contact_id, 'sendDeferred'\n           FROM receipts r\n           JOIN contact_send_backoff b ON b.contact_id = r.contact_id AND b.retry_at > ?\n           JOIN messages m ON m.message_id = r.message_id\n           WHERE (? IS NULL OR r.contact_id = ?)\n             AND r.ack_by_server_at IS NULL\n             AND r.will_be_retried_by_media_upload = 0\n             AND r.deferred_until_session IS NULL\n             AND m.sender_id IS NULL\n           ON CONFLICT(message_id, contact_id, type) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "75b0571d33cc5fef61544777a4822e773f40bdce849bcfce833cc8322251f975"
+}

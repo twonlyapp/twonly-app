@@ -96,7 +96,7 @@ class _ChatWebxdcMessageEntryState extends State<ChatWebxdcMessageEntry> {
     _origin = origin;
     _seed(origin);
 
-    final app = await WebxdcService.appNamed(
+    final app = await WebxdcService.cardApp(
       origin.appId,
       origin.version.toInt(),
     );

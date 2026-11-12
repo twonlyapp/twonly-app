@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
@@ -51,6 +52,43 @@ Future<void> sendReaction(
     ).writeToBuffer(),
     onlySendIfNoReceiptsAreOpen: false,
   );
+}
+
+Future<void> removeReaction(
+  String groupId,
+  String messageId,
+  String emoji,
+) async {
+  await rust_reactions.updateOwnReaction(
+    message: messageId,
+    emoji: emoji,
+    remove: true,
+    transaction: currentDatabaseSession(),
+  );
+  await RustApi.sendEncryptedContentToGroup(
+    groupId: groupId,
+    content: EncryptedContent(
+      reaction: EncryptedContent_Reaction(
+        targetMessageId: messageId,
+        emoji: emoji,
+        remove: true,
+      ),
+    ).writeToBuffer(),
+    onlySendIfNoReceiptsAreOpen: false,
+  );
+}
+
+/// The first row of the media viewer's reactions: the user's own choice from
+/// the settings, else the first animated emojis.
+List<String> quickReactionEmojis() {
+  // Widget tests build menus without a signed-in user.
+  final chosen = locator.isRegistered<UserService>()
+      ? userService.currentUser.preSelectedEmojies
+      : null;
+  final source = (chosen == null || chosen.isEmpty)
+      ? EmojiAnimationComp.animatedIconKeys
+      : chosen;
+  return source.take(6).toList();
 }
 
 class EmojiReactionWidget extends StatefulWidget {

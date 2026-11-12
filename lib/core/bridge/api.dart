@@ -13,7 +13,7 @@ import 'stories.dart';
 
 // These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 enum ApiConnectionState {
   stopped,
@@ -63,6 +63,39 @@ enum ApiEventKind {
   /// manifest is already rewritten; only the native widgets still have to be
   /// told to redraw, which is something Flutter has to ask for.
   widgetMediaReceived,
+}
+
+/// Progress of a large mailbox catch-up. While none runs, `active` is false
+/// and both counts are zero.
+class FilterLocation {
+  final double latitude;
+  final double longitude;
+  final double accuracy;
+  final PlatformInt64 fixTimestampMs;
+
+  const FilterLocation({
+    required this.latitude,
+    required this.longitude,
+    required this.accuracy,
+    required this.fixTimestampMs,
+  });
+
+  @override
+  int get hashCode =>
+      latitude.hashCode ^
+      longitude.hashCode ^
+      accuracy.hashCode ^
+      fixTimestampMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FilterLocation &&
+          runtimeType == other.runtimeType &&
+          latitude == other.latitude &&
+          longitude == other.longitude &&
+          accuracy == other.accuracy &&
+          fixTimestampMs == other.fixTimestampMs;
 }
 
 class FrbAdditionalAccount {
@@ -273,8 +306,6 @@ class FrbUserData {
           joinedAt == other.joinedAt;
 }
 
-/// Progress of a large mailbox catch-up. While none runs, `active` is false
-/// and both counts are zero.
 class MailboxSyncProgress {
   final bool active;
 
@@ -304,6 +335,7 @@ class MailboxSyncProgress {
           remaining == other.remaining;
 }
 
+/// Flutter-facing facade for the Rust-owned API runtime.
 class RustApi {
   const RustApi();
 
@@ -416,10 +448,6 @@ class RustApi {
         mediaId: mediaId,
       );
 
-  /// Coordinates for native city lookup, available only with sticker opt-in.
-  static Future<StickerLocation?> currentLocationForSticker() =>
-      RustLib.instance.api.crateBridgeApiRustApiCurrentLocationForSticker();
-
   static Future<String?> currentUserAvatarPath() =>
       RustLib.instance.api.crateBridgeApiRustApiCurrentUserAvatarPath();
 
@@ -452,6 +480,11 @@ class RustApi {
   static Future<void> downloadPendingMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiDownloadPendingMedia();
 
+  /// Re-encodes a sticker after the user erased parts of it. Flutter sends
+  /// the edit as PNG at sticker size.
+  static Future<StickerOutput> encodeEditedSticker({required List<int> png}) =>
+      RustLib.instance.api.crateBridgeApiRustApiEncodeEditedSticker(png: png);
+
   /// Path to a contact's avatar PNG, rendered from the stored SVG if it is
   /// missing. Returns `None` when the contact has no avatar at all.
   static Future<String?> ensureAvatarPng({required PlatformInt64 contactId}) =>
@@ -469,6 +502,11 @@ class RustApi {
 
   static Stream<ApiEvent> events() =>
       RustLib.instance.api.crateBridgeApiRustApiEvents();
+
+  /// The location filter's fix, or none when the filter is disabled or no
+  /// fix arrives within the three-minute window.
+  static Future<FilterLocation?> filterLocation() =>
+      RustLib.instance.api.crateBridgeApiRustApiFilterLocation();
 
   /// Settles every background transfer this device believes is still in
   /// flight and resumes any upload a terminated process left behind.
@@ -659,8 +697,8 @@ class RustApi {
   static Future<void> previewMailboxSync() =>
       RustLib.instance.api.crateBridgeApiRustApiPreviewMailboxSync();
 
-  /// Warms the shared location cache if Memories or city stickers are
-  /// enabled.
+  /// Warms the shared location cache if Memories or the location filter
+  /// are enabled.
   static Future<void> prewarmMemoryLocation() =>
       RustLib.instance.api.crateBridgeApiRustApiPrewarmMemoryLocation();
 
@@ -1016,26 +1054,4 @@ class RustApi {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RustApi && runtimeType == other.runtimeType;
-}
-
-/// Flutter-facing facade for the Rust-owned API runtime.
-class StickerLocation {
-  final double latitude;
-  final double longitude;
-
-  const StickerLocation({
-    required this.latitude,
-    required this.longitude,
-  });
-
-  @override
-  int get hashCode => latitude.hashCode ^ longitude.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StickerLocation &&
-          runtimeType == other.runtimeType &&
-          latitude == other.latitude &&
-          longitude == other.longitude;
 }

@@ -8,4 +8,6 @@
     <string name="widget_open_app_first">Open twonly once to load your contacts and contact groups.</string>
     <string name="widget_save">Add widget</string>
     <string name="widget_image_description">Latest photo in your widget</string>
+    <string name="notification_sync_channel">Background sync</string>
+    <string name="notification_sync_title">Checking for new messages</string>
 </resources>

@@ -75,7 +75,10 @@ pub struct VacationOptions {
 #[flutter_rust_bridge::frb(sync)]
 pub fn vacation_options() -> VacationOptions {
     VacationOptions {
-        icons: VACATION_ICONS.iter().map(|icon| (*icon).to_owned()).collect(),
+        icons: VACATION_ICONS
+            .iter()
+            .map(|icon| (*icon).to_owned())
+            .collect(),
         min_days: MIN_VACATION_DAYS,
         max_days: MAX_VACATION_DAYS,
         min_flames: MIN_FLAMES_TO_FREEZE,
@@ -89,7 +92,11 @@ pub async fn own_vacation() -> Result<Option<VacationWindow>> {
     ctx.foreground_database_call(|| async {
         let database = ctx.app_db.read().await.clone();
 
-        Group::own_vacation(&database.read_pool, crate::utils::current_time().timestamp()).await
+        Group::own_vacation(
+            &database.read_pool,
+            crate::utils::current_time().timestamp(),
+        )
+        .await
     })
     .await
 }

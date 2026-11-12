@@ -295,11 +295,11 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub store_location_in_memories: bool,
-    /// Allows an explicitly added city sticker in the media editor. Native
-    /// reverse geocoding may send coordinates to the platform provider.
+    /// Offers a camera filter that shows the current location on a map. The
+    /// coordinates leave the device only with media sent with that filter.
     #[serde(default)]
     #[frb(non_final)]
-    pub enable_location_sticker: bool,
+    pub location_filter: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub auto_store_all_send_unlimited_media_files: bool,
@@ -642,9 +642,9 @@ mod tests {
 
         assert!(!config.is_user_discovery_enabled);
 
-        assert!(!config.enable_location_sticker);
-
         assert!(!config.store_location_in_memories);
+
+        assert!(!config.location_filter);
 
         assert_eq!(config.last_server_message_at, None);
 

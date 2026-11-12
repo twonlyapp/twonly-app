@@ -22,6 +22,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/contact_enums.dart';
 import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/services/memories/memory_importer.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -47,6 +48,14 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
 
   if (uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
     await PasswordlessRecoveryService.handleRecoveryLink(uri.toString());
+    return true;
+  }
+
+  // A memories importer pairing starts only from the twonly camera. A link
+  // opened by the OS looks the same whether the system camera scanned it or
+  // it was tapped in a mail or another messenger, so it is always refused.
+  if (MemoryImporterService.isPairingLink(uri.toString())) {
+    await MemoryImporterService.refuseLink(context);
     return true;
   }
 
@@ -95,7 +104,8 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
       .where((part) => part.isNotEmpty)
       .toList();
   if (rawPathSegments.firstOrNull == 'qr' ||
-      rawPathSegments.firstOrNull == 'r') {
+      rawPathSegments.firstOrNull == 'r' ||
+      rawPathSegments.firstOrNull == 'i') {
     if (context.mounted) await _showInvalidVerificationLink(context);
     return true;
   }

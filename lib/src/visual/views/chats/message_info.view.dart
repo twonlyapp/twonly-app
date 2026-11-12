@@ -214,8 +214,17 @@ class _MessageInfoViewState extends State<MessageInfoView> {
             t.$1.type == MessageActionType.sendFailed &&
             t.$2.userId == groupMember.$2.userId,
       );
+      final sendDeferred = messageActions.firstWhereOrNull(
+        (t) =>
+            t.$1.type == MessageActionType.sendDeferred &&
+            t.$2.userId == groupMember.$2.userId,
+      );
       var actionTypeText = context.lang.waitingForInternet;
       var actionAt = widget.message.createdAt;
+      if (sendDeferred != null) {
+        actionTypeText = context.lang.messageSendDeferred;
+        actionAt = sendDeferred.$1.actionAt;
+      }
       if (ackByServer != null) {
         actionTypeText = context.lang.sent;
         actionAt = ackByServer.$1.actionAt;

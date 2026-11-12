@@ -460,7 +460,21 @@ fn downscale(image: &DynamicImage, min_edge: u32) -> DynamicImage {
 
     let target_height = ((height as f32 * scale).round() as u32).max(1);
 
-    image.resize_exact(
+    // Lanczos over every pixel of a full-resolution photo costs more than
+    // decoding it. A box filter averages the bulk of the reduction cheaply and
+    // without aliasing; Lanczos only runs on the last 2x, where its sharpness
+    // is what remains visible.
+    let prescaled;
+
+    let source = if width >= target_width * 4 && height >= target_height * 4 {
+        prescaled = image.thumbnail_exact(target_width * 2, target_height * 2);
+
+        &prescaled
+    } else {
+        image
+    };
+
+    source.resize_exact(
         target_width,
         target_height,
         image::imageops::FilterType::Lanczos3,
@@ -485,6 +499,15 @@ pub(crate) fn has_visible_content(path: &Path) -> Result<bool> {
 /// Trims fully transparent borders left by the editor. Returns whether the
 /// image was rewritten.
 pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
+    // The header already rules out nearly every photo: without an alpha
+    // channel there is nothing to trim, and decoding it in full only to find
+    // that out cost as much as rendering its thumbnail.
+    if header_color_type(path)
+        .is_some_and(|color| !matches!(color, image::ColorType::Rgba8 | image::ColorType::La8))
+    {
+        return Ok(false);
+    }
+
     let image = decode(path)?;
 
     if !matches!(
@@ -523,6 +546,20 @@ pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
     write_atomically(path, &encoded)?;
 
     Ok(true)
+}
+
+/// The color type a Rust decoder would produce, read from the header alone.
+/// `None` for formats only the platform decodes (HEIC/HEIF).
+fn header_color_type(path: &Path) -> Option<image::ColorType> {
+    use image::ImageDecoder;
+
+    ImageReader::open(path)
+        .ok()?
+        .with_guessed_format()
+        .ok()?
+        .into_decoder()
+        .ok()
+        .map(|decoder| decoder.color_type())
 }
 
 /// Inclusive bounding box of every pixel that is not effectively transparent.

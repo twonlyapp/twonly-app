@@ -154,6 +154,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                         final layer =
                             // ignore: inference_failure_on_function_invocation
                             await showModalBottomSheet(
+                                  isScrollControlled: true,
                                   context: context,
                                   backgroundColor: context.color.surface,
                                   builder: (context) {

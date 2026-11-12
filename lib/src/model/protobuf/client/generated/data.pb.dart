@@ -114,6 +114,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     StickerData? sticker,
     LiveLocationData? liveLocation,
     VacationData? vacation,
+    PhotoLocationData? photoLocation,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -130,6 +131,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (sticker != null) result.sticker = sticker;
     if (liveLocation != null) result.liveLocation = liveLocation;
     if (vacation != null) result.vacation = vacation;
+    if (photoLocation != null) result.photoLocation = photoLocation;
     return result;
   }
 
@@ -168,6 +170,8 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: LiveLocationData.create)
     ..aOM<VacationData>(13, _omitFieldNames ? '' : 'vacation',
         subBuilder: VacationData.create)
+    ..aOM<PhotoLocationData>(14, _omitFieldNames ? '' : 'photoLocation',
+        subBuilder: PhotoLocationData.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -316,6 +320,196 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   void clearVacation() => $_clearField(13);
   @$pb.TagNumber(13)
   VacationData ensureVacation() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  PhotoLocationData get photoLocation => $_getN(13);
+  @$pb.TagNumber(14)
+  set photoLocation(PhotoLocationData value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasPhotoLocation() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearPhotoLocation() => $_clearField(14);
+  @$pb.TagNumber(14)
+  PhotoLocationData ensurePhotoLocation() => $_ensure(13);
+}
+
+/// The location filter: where the media was taken, and the rectangle the
+/// sender left empty for the map. The map is drawn on receipt rather than
+/// baked into the pixels. The rectangle is in fractions of the media's width
+/// and height, so it fits on every screen size.
+class PhotoLocationData extends $pb.GeneratedMessage {
+  factory PhotoLocationData({
+    $core.double? latitude,
+    $core.double? longitude,
+    $core.double? accuracy,
+    $fixnum.Int64? fixTimestampMs,
+    $core.double? mapLeft,
+    $core.double? mapTop,
+    $core.double? mapWidth,
+    $core.double? mapHeight,
+    $core.double? mapLatitude,
+    $core.double? mapLongitude,
+    $core.double? mapZoom,
+  }) {
+    final result = create();
+    if (latitude != null) result.latitude = latitude;
+    if (longitude != null) result.longitude = longitude;
+    if (accuracy != null) result.accuracy = accuracy;
+    if (fixTimestampMs != null) result.fixTimestampMs = fixTimestampMs;
+    if (mapLeft != null) result.mapLeft = mapLeft;
+    if (mapTop != null) result.mapTop = mapTop;
+    if (mapWidth != null) result.mapWidth = mapWidth;
+    if (mapHeight != null) result.mapHeight = mapHeight;
+    if (mapLatitude != null) result.mapLatitude = mapLatitude;
+    if (mapLongitude != null) result.mapLongitude = mapLongitude;
+    if (mapZoom != null) result.mapZoom = mapZoom;
+    return result;
+  }
+
+  PhotoLocationData._();
+
+  factory PhotoLocationData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PhotoLocationData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PhotoLocationData',
+      createEmptyInstance: create)
+    ..aD(1, _omitFieldNames ? '' : 'latitude')
+    ..aD(2, _omitFieldNames ? '' : 'longitude')
+    ..aD(3, _omitFieldNames ? '' : 'accuracy')
+    ..aInt64(4, _omitFieldNames ? '' : 'fixTimestampMs')
+    ..aD(5, _omitFieldNames ? '' : 'mapLeft')
+    ..aD(6, _omitFieldNames ? '' : 'mapTop')
+    ..aD(7, _omitFieldNames ? '' : 'mapWidth')
+    ..aD(8, _omitFieldNames ? '' : 'mapHeight')
+    ..aD(9, _omitFieldNames ? '' : 'mapLatitude')
+    ..aD(10, _omitFieldNames ? '' : 'mapLongitude')
+    ..aD(11, _omitFieldNames ? '' : 'mapZoom')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PhotoLocationData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PhotoLocationData copyWith(void Function(PhotoLocationData) updates) =>
+      super.copyWith((message) => updates(message as PhotoLocationData))
+          as PhotoLocationData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PhotoLocationData create() => PhotoLocationData._();
+  @$core.override
+  PhotoLocationData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PhotoLocationData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PhotoLocationData>(create);
+  static PhotoLocationData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.double get latitude => $_getN(0);
+  @$pb.TagNumber(1)
+  set latitude($core.double value) => $_setDouble(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLatitude() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLatitude() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.double get longitude => $_getN(1);
+  @$pb.TagNumber(2)
+  set longitude($core.double value) => $_setDouble(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLongitude() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLongitude() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.double get accuracy => $_getN(2);
+  @$pb.TagNumber(3)
+  set accuracy($core.double value) => $_setDouble(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAccuracy() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAccuracy() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get fixTimestampMs => $_getI64(3);
+  @$pb.TagNumber(4)
+  set fixTimestampMs($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFixTimestampMs() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFixTimestampMs() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.double get mapLeft => $_getN(4);
+  @$pb.TagNumber(5)
+  set mapLeft($core.double value) => $_setDouble(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMapLeft() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMapLeft() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.double get mapTop => $_getN(5);
+  @$pb.TagNumber(6)
+  set mapTop($core.double value) => $_setDouble(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasMapTop() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMapTop() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.double get mapWidth => $_getN(6);
+  @$pb.TagNumber(7)
+  set mapWidth($core.double value) => $_setDouble(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMapWidth() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMapWidth() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.double get mapHeight => $_getN(7);
+  @$pb.TagNumber(8)
+  set mapHeight($core.double value) => $_setDouble(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasMapHeight() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearMapHeight() => $_clearField(8);
+
+  /// Selected map viewport. Absent in older messages, which center on the
+  /// location fix at zoom 14. Zoom is relative to a 260 logical pixel card.
+  @$pb.TagNumber(9)
+  $core.double get mapLatitude => $_getN(8);
+  @$pb.TagNumber(9)
+  set mapLatitude($core.double value) => $_setDouble(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMapLatitude() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMapLatitude() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.double get mapLongitude => $_getN(9);
+  @$pb.TagNumber(10)
+  set mapLongitude($core.double value) => $_setDouble(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMapLongitude() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMapLongitude() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.double get mapZoom => $_getN(10);
+  @$pb.TagNumber(11)
+  set mapZoom($core.double value) => $_setDouble(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMapZoom() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearMapZoom() => $_clearField(11);
 }
 
 /// "On Vacation": the sender's streak with the receiver is frozen from

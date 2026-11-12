@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contact_send_backoff(contact_id, attempts, retry_at) VALUES (?, ?, ?)\n           ON CONFLICT(contact_id) DO UPDATE SET\n               attempts = excluded.attempts,\n               retry_at = excluded.retry_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "4d276aaf60607b7d74a1b33721d110cabc6dd52e6309ffe973429c1c8db0b93d"
+}

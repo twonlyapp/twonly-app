@@ -50,6 +50,7 @@
     }
   },
   "chatListDetailInput": "Nachricht eingeben",
+  "chatUnavailable": "Diese Unterhaltung ist nicht mehr verfügbar.",
   "userDeletedAccount": "Der Nutzer hat deren Konto gelöscht.",
   "contextMenuUserProfile": "Userprofil",
   "contextMenuArchiveUser": "Archivieren",
@@ -75,6 +76,8 @@
   "settingsTitle": "Einstellungen",
   "settingsChats": "Chats & Kamera",
   "settingsStorageData": "Speicher & Downloads",
+  "settingsMemories": "Memories",
+  "settingsMemoriesSectionSaving": "Speichern",
   "memoryDetailsTitle": "Details",
   "memoryDetailsCapturedAt": "Aufgenommen",
   "memoryDetailsLocation": "Standort",
@@ -83,16 +86,13 @@
   "memoryDetailsOpenMap": "In Karte öffnen",
   "memoryLocationTitle": "Standort in Memories speichern",
   "memoryLocationSubtitle": "Aufnahmekoordinaten für Memories und Galerie-Exporte. Diese Koordinaten werden nie an Kontakte gesendet.",
-  "locationStickerSettingTitle": "Standort-Sticker",
-  "locationStickerSettingSubtitle": "Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.",
-  "locationStickerLoading": "Dein Standort wird ermittelt…",
   "liveLocationMenu": "Standort",
   "memoriesMenu": "Memories",
   "memoriesLoadFailed": "Das Bild aus Memories konnte nicht geladen werden.",
   "liveLocationTitle": "Live-Standort",
   "liveLocationExplanation": "Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.",
   "liveLocationDuration": "Teilen für",
-  "liveLocationMinutes": "{count} Minuten",
+  "liveLocationMinutes": "{count, plural, =1{1 Minute} other{{count} Minuten}}",
   "@liveLocationMinutes": {
     "placeholders": {
       "count": {
@@ -108,6 +108,18 @@
       }
     }
   },
+  "liveLocationHoursMinutes": "{hours} Std. {minutes} Min.",
+  "@liveLocationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "liveLocationCustom": "Eigene Dauer",
   "liveLocationStart": "Teilen starten",
   "liveLocationStop": "Teilen beenden",
   "liveLocationAlreadySharing": "Dein Standort wird bereits in diesem Chat geteilt.",
@@ -124,8 +136,21 @@
       }
     }
   },
+  "locationFilterTitle": "Standortfilter",
+  "locationFilterSubtitle": "Fügt einen Kamerafilter mit einer Karte deines Standorts hinzu. Dein Standort wird nur mit Medien gesendet, die du mit diesem Filter verschickst.",
+  "locationFilterSearching": "Standort wird gesucht…",
+  "locationFilterUnavailable": "Standort nicht gefunden",
+  "photoLocationTakenAt": "Standort um {time}",
+  "@photoLocationTakenAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "memoryLocationPermissionDenied": "Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.",
-  "settingsStorageDataStoreInGTitle": "In der Galerie speichern",
+  "settingsStorageDataStoreInGTitle": "Kopie in System-Galerie speichern",
+  "settingsStorageDataStoreInGSubtitle": "Gespeicherte Memories zusätzlich in der Galerie deines Geräts ablegen.",
   "settingsStorageDataMediaAutoDownload": "Automatischer Mediendownload",
   "settingsStorageDataAutoDownMobile": "Bei Nutzung mobiler Daten",
   "settingsStorageDataAutoDownWifi": "Bei Nutzung von WLAN",
@@ -147,6 +172,7 @@
   "settingsAppearance": "Design & Sprache",
   "settingsPrivacy": "Datenschutz & Sicherheit",
   "settingsPrivacyBlockUsers": "Blockierte Kontakte",
+  "settingsPrivacyLocation": "Standort",
   "settingsPrivacyBlockUsersDesc": "Blockierte Kontakte können nicht mit dir kommunizieren. Du kannst einen blockierten Kontakt jederzeit wieder entsperren.",
   "settingsPrivacyBlockUsersCount": "{len} Kontakt(e)",
   "publicProfilePrivacyTitle": "Öffentliches Profil",
@@ -163,6 +189,17 @@
   "settingsNotification": "Benachrichtigungen",
   "settingsNotifyPermission": "Benachrichtigungsberechtigung",
   "settingsNotifyPermissionDesc": "Öffne die Systemeinstellungen, um Benachrichtigungen zu erlauben oder anzupassen.",
+  "settingsNotifyPollTitle": "Regelmäßig auf neue Nachrichten prüfen",
+  "settingsNotifyPollSubtitle": "Ohne Google-Dienste wird bei Internetverbindung etwa alle {minutes} Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an.",
+  "settingsNotifyPollWarning": "Ohne Google-Dienste kann twonly keine sofortigen Push-Benachrichtigungen empfangen. Bei Internetverbindung wird etwa alle {minutes} Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an. Wenn dein Handy im Ruhezustand ist oder Hintergrundaktivitäten einschränkt, können mehrere Stunden vergehen.",
+  "settingsNotifyPollBatteryTitle": "Akkuoptimierung",
+  "settingsNotifyPollBatteryHelp": "Deaktiviere die Akkuoptimierung für twonly, damit zuverlässiger nach Nachrichten gesucht wird. Wähle in der Systemliste bei Bedarf „Alle Apps“, suche twonly und wähle „Nicht optimieren“. Android kann die Abfragen weiterhin verzögern.",
+  "settingsNotifyPollBatteryActive": "Akkuoptimierung: aktiv",
+  "settingsNotifyPollBatteryDisabled": "Akkuoptimierung: deaktiviert",
+  "settingsNotifyPollRestrictedTitle": "Hintergrundaktivität eingeschränkt",
+  "settingsNotifyPollRestrictedHelp": "Android blockiert die Abfragen im Hintergrund. Öffne die App-Einstellungen von twonly und erlaube die Akkunutzung im Hintergrund.",
+  "settingsNotifyPollOpenSettings": "Einstellungen öffnen",
+  "settingsNotifyPollLater": "Später",
   "settingsNotifyResetTitle": "Benachrichtigungstoken zurücksetzen",
   "settingsNotifyResetTitleSubtitle": "Setze deine Benachrichtigungstoken zurück, wenn du Probleme beim Empfang von Push-Benachrichtigungen hast.",
   "settingsNotifyResetTitleReset": "Verbindung für Benachrichtigungen neu eingerichtet",
@@ -323,6 +360,7 @@
   "galleryExportSuccess": "Erfolgreich in der Gallery gespeichert.",
   "galleryCancel": "Abbrechen",
   "memoriesEmpty": "Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.",
+  "memoriesRemovedLocallySnackbar": "{count, plural, =1 {Vom Gerät entfernt, weiterhin in der Cloud gesichert} other {{count} Elemente vom Gerät entfernt, weiterhin in der Cloud gesichert}}",
   "memoriesDeleteSnackbarSuccess": "{count, plural, =1 {1 Element erfolgreich gelöscht} other {{count} Elemente erfolgreich gelöscht}}",
   "deleteTitle": "Bist du dir sicher?",
   "deleteOkBtnForAll": "Für alle löschen",
@@ -421,6 +459,7 @@
   "durationShortMinute": "Min.",
   "durationShortHour": "Std.",
   "durationShortDays": "{count, plural, =1{1 Tag} other{{count} Tage}}",
+  "durationAfterDays": "{count, plural, =1{einem Tag} other{{count} Tagen}}",
   "contacts": "Kontakte",
   "groups": "Gruppen",
   "newGroup": "Neue Gruppe",
@@ -530,6 +569,7 @@
   "customAvatarEveryone": "Alle",
   "customAvatarChooseSource": "Avatar-Foto auswählen",
   "customAvatarCreateFailed": "Der Foto-Avatar konnte nicht erstellt werden.",
+  "customAvatarSave": "Als Avatar verwenden",
   "inProcess": "Wird verarbeitet",
   "draftMessage": "Entwurf",
   "voiceMessageSlideToCancel": "Zum Abbrechen ziehen",
@@ -596,16 +636,17 @@
   "memoriesXYearsAgo": "Vor {years} Jahren",
   "memoriesAMonthAgo": "Vor einem Monat",
   "memoriesXMonthsAgo": "Vor {months} Monaten",
+  "memoriesFlashbackJumpTo": "Anzeigen",
   "migrationOfMemories": "Migration von Mediendateien: {open} noch offen.",
   "autoStoreAllSendUnlimitedMediaFiles": "Alle gesendeten Medien speichern",
   "autoStoreAllSendUnlimitedMediaFilesSubtitle": "Wenn du diese Option aktivierst, werden alle Bilder, die du sendest, gespeichert, sofern sie mit einem unendlichen Countdown und nicht im twonly-Modus gesendet wurden.",
   "termsOfService": "Allgemeine Geschäftsbedingungen",
   "privacyPolicy": "Datenschutzerklärung",
   "additionalUserAddError": "{username} konnte nicht hinzugefügt werden, bitte versuche es später noch einmal.",
-  "additionalUserAddErrorNotInFreePlan": "{username} hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.",
+  "additionalUserAddErrorNotInFreePlan": "{username} hat bereits einen bezahlten Plan und konnte daher nicht hinzugefügt werden.",
   "additionalUserAddButton": "Zusätzlichen Benutzer hinzufügen ({used}/{limit})",
   "additionalUserRemoveTitle": "Diesen zusätzlichen Benutzer entfernen",
-  "additionalUserRemoveDesc": "Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Tarif zurückgestuft und du kannst eine andere Person hinzufügen.",
+  "additionalUserRemoveDesc": "Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Plan zurückgestuft und du kannst eine andere Person hinzufügen.",
   "additionalUserSelectTitle": "Zusätzliche Benutzer auswählen",
   "additionalUserSelectButton": "Benutzer auswählen ({used}/{limit})",
   "storeAsDefault": "Als Standard speichern",
@@ -870,21 +911,6 @@
       "error": {}
     }
   },
-  "importGalleryImportingOf": "{current} von {total} wird importiert...",
-  "@importGalleryImportingOf": {
-    "placeholders": {
-      "current": {},
-      "total": {}
-    }
-  },
-  "importGalleryStarting": "Import wird gestartet...",
-  "importGalleryComplete": "Import abgeschlossen: {imported} erfolgreich importiert und {failed} fehlgeschlagen.",
-  "@importGalleryComplete": {
-    "placeholders": {
-      "imported": {},
-      "failed": {}
-    }
-  },
   "importGalleryGrantAccess": "Zugriff erlauben",
   "importGalleryOpenSettings": "Einstellungen öffnen",
   "importGalleryPermissionDenied": "Zugriff auf Galerie verweigert.",
@@ -895,7 +921,6 @@
   "importGalleryNoImagesFoundDesc": "Es befinden sich keine Bilder auf deinem Gerät.",
   "importGalleryFilterTwonly": "Nur das twonly-Album anzeigen",
   "importGalleryRefresh": "Aktualisieren",
-  "importGallerySelectToImport": "Elemente zum Importieren auswählen",
   "importGalleryImportCount": "{count, plural, =1{1 Element importieren} other{{count} Elemente importieren}}",
   "@importGalleryImportCount": {
     "placeholders": {
@@ -904,7 +929,18 @@
       }
     }
   },
-  "emptyChatListTitle": "Finde deinen ersten Freund",
+  "importGalleryProgressTitle": "Deine Erinnerungen werden importiert",
+  "importGalleryProgressHint": "Lass twonly geöffnet, bis der Import abgeschlossen ist.",
+  "importGalleryProgressCount": "{done} von {total}",
+  "importGalleryStop": "Import stoppen",
+  "importGalleryStopping": "Wird gestoppt…",
+  "importGalleryDoneTitle": "Import abgeschlossen",
+  "importGalleryStoppedTitle": "Import gestoppt",
+  "importGalleryImportedLabel": "Importiert",
+  "importGalleryFailedLabel": "Fehlgeschlagen",
+  "importGalleryRemainingLabel": "Verbleibend",
+  "importGalleryDone": "Fertig",
+  "emptyChatListTitle": "Finde deine Freunde",
   "emptyChatListDesc": "Lass Freunde deinen QR-Code scannen oder teile dein Profil mit ihnen.",
   "emptyChatListShareBtn": "Profil teilen",
   "emptyChatListScanBtn": "QR-Code",
@@ -1056,8 +1092,16 @@
   "galleryActionShare": "Teilen",
   "settingsStorageHidePromo": "Ausblenden",
   "memoriesBackupTitle": "Memories Backup",
+  "memoriesBackupUsageOf": "von {max}",
+  "memoriesBackupCount": "{count, plural, =1 {1 Memory in der Cloud} other {{count} Memories in der Cloud}}",
+  "memoriesBackupPercentUsed": "{percent} % belegt",
+  "memoriesBackupUploading": "Lade {current} von {total} hoch",
+  "memoriesBackupDisableSubtitle": "Löscht deine gesicherten Memories aus der Cloud.",
   "settingsHelpNews": "Neuigkeiten",
+  "settingsStorageDeleteLocal": "Nur lokal löschen",
+  "settingsStorageDeleteCompletely": "Komplett löschen",
   "settingsStorageContents": "Speicherplatz freigeben",
+  "settingsStorageFilterAll": "Alle",
   "settingsStorageSortStorage": "Belegter Speicher",
   "settingsStorageSortNewest": "Neueste",
   "settingsStorageSortOldest": "Älteste",
@@ -1107,6 +1151,7 @@
   "contactGroupsTitle": "Kontaktgruppen",
   "contactGroupsSubtitleEmpty": "Keine sichtbaren Kontaktgruppen ausgewählt",
   "createContactGroup": "Kontaktgruppe erstellen",
+  "createShortcut": "Shortcut erstellen",
   "editContactGroup": "Kontaktgruppe anpassen",
   "deleteContactGroup": "Kontaktgruppe löschen",
   "deleteContactGroupConfirmation": "Möchtest du diese Kontaktgruppe wirklich löschen? Sie wird von allen Kontakten und Gruppen entfernt.",
@@ -1157,7 +1202,7 @@
   "memoriesDeletingProgress": "Erinnerungen werden gelöscht...",
   "memoriesExportingProgress": "Erinnerungen werden exportiert...",
   "fileLimitReachedTitle": "Datei zu groß zum Senden",
-  "fileLimitReachedDetail": "Diese Datei ist {size} groß, dein Tarif erlaubt aber höchstens {limit} pro Sendung.",
+  "fileLimitReachedDetail": "Diese Datei ist {size} groß, dein Plan erlaubt aber höchstens {limit} pro Sendung.",
   "@fileLimitReachedDetail": {
     "placeholders": {
       "size": {
@@ -1168,7 +1213,7 @@
       }
     }
   },
-  "fileLimitReachedDetailNoSize": "Dein Tarif erlaubt höchstens {limit} pro Sendung.",
+  "fileLimitReachedDetailNoSize": "Dein Plan erlaubt höchstens {limit} pro Sendung.",
   "@fileLimitReachedDetailNoSize": {
     "placeholders": {
       "limit": {
@@ -1177,8 +1222,8 @@
     }
   },
   "fileLimitReachedHint": "Nimm ein kürzeres Video auf und sende es erneut.",
-  "fileLimitReachedHintFree": "Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.",
-  "fileLimitReachedUpgrade": "Tarif wechseln",
+  "fileLimitReachedHintFree": "Nimm ein kürzeres Video auf oder wechsle den Plan, um größere Dateien zu senden.",
+  "fileLimitReachedUpgrade": "Plan wechseln",
   "contactGroupUsedByWidget": "Homebildschirm-Widget",
   "contactGroupAddWidgetSubtitle": "Füge ein Widget für diese Kontaktgruppe hinzu.",
   "contactGroupWidgetTutorialTitle": "Homebildschirm-Widget hinzufügen",
@@ -1275,6 +1320,13 @@
   "deleteSticker": "Sticker löschen",
   "rotateSticker": "Sticker drehen",
   "stickerRotateFailed": "Der Sticker konnte nicht gedreht werden.",
+  "stickerDraftRotate": "Drehen",
+  "stickerDraftErase": "Radieren",
+  "stickerEraseTitle": "Teile entfernen",
+  "stickerEraseHint": "Male über alles, was entfernt werden soll.",
+  "stickerEraseBrushSize": "Pinselgröße",
+  "stickerEraseApply": "Übernehmen",
+  "stickerEraseFailed": "Die Änderungen konnten nicht übernommen werden. Ein Teil des Bildes muss übrig bleiben.",
   "releaseNotesTitle": "Was ist neu?",
   "releaseNotesIntroduction": "Das bisher größte twonly-Update ist da. Hier ist ein kurzer Überblick.",
   "releaseNotesAlsoImproved": "Außerdem verbessert",
@@ -1299,6 +1351,8 @@
   "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}",
   "mediaSendFailed": "Senden fehlgeschlagen",
   "messageSendFailedUserInactive": "Benutzer inaktiv",
+  "messageSendDeferred": "Wird später gesendet",
+  "messageSendDeferredExplanation": "Der Server hält diese Nachricht gerade zurück, meist weil der Empfänger deine vorherigen Nachrichten noch nicht abgeholt hat. twonly sendet sie später automatisch.",
   "mailboxSyncTitle": "twonly wird synchronisiert",
   "mailboxSyncBody": "twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.",
   "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}",
@@ -1329,7 +1383,7 @@
   "settingsNotificationsDisabledHelp": "Erlaube zuerst Benachrichtigungen in den Systemeinstellungen. Tippe dafür auf den Status oben.",
   "settingsStatusLoading": "Status wird geprüft …",
   "settingsStatusUnavailable": "Status konnte nicht geladen werden",
-  "settingsNewsShortcut": "Neuigkeiten-Symbol anzeigen",
+  "settingsNewsShortcut": "News-Symbol immer ausblenden",
   "settingsDownloadNone": "Bilder & Videos nicht automatisch laden",
   "settingsDeleteAccountFailed": "Dein Konto konnte nicht gelöscht werden. Prüfe deine Internetverbindung und versuche es erneut.",
   "settingsAccountDeleted": "Konto gelöscht",
@@ -1389,5 +1443,50 @@
   "notificationVacationEnd": "ist zurück aus dem Urlaub.",
   "settingsChatsSectionChats": "Chats",
   "settingsChatsSectionFlames": "Flammen",
-  "settingsChatsSectionCamera": "Kamera"
+  "settingsChatsSectionCamera": "Kamera",
+  "memoryImporterConnectTitle": "Import verbinden",
+  "memoryImporterConnectBody": "Diese Browser-Sitzung kann nur neue Memories zu deinem Konto hinzufügen. Auf bestehende Uploads hat sie nie Zugriff.",
+  "memoryImporterConnectWarning": "Verbinde nur, wenn du {origin} selbst geöffnet hast. twonly bittet dich nie, einen Code für Support, eine Belohnung oder eine Verifizierung zu scannen.",
+  "memoryImporterConnect": "Verbinden",
+  "memoryImporterConnectIn": "Verbinden ({seconds})",
+  "memoryImporterConnectedTitle": "Verbunden",
+  "memoryImporterConnected": "Mach auf deinem Computer weiter: Prüfe, dass dort dein Benutzername steht, und starte dann den Upload. Deine Memories erscheinen hier, während sie hochgeladen werden.",
+  "memoryImporterConnectedDone": "Verstanden, weiter am Computer",
+  "memoryImporterAlreadyClaimed": "Jemand anderes hat diesen Code bereits gescannt. Lade die Import-Seite neu, zeige den Code niemandem und scanne erneut.",
+  "memoryImporterCodeExpired": "Dieser Code ist abgelaufen. Lade die Import-Seite neu und scanne den neuen Code.",
+  "memoryImporterTooMany": "Es sind bereits drei Importe verbunden. Entferne einen unter Einstellungen → Memories → Aus anderen Apps importieren.",
+  "memoryImporterNeedsPlan": "Für den Import von Memories brauchst du einen Plan mit Memories-Speicher.",
+  "memoryImporterRequiresPlanTitle": "Abo erforderlich",
+  "memoryImporterRequiresPlan": "Importierte Memories werden in deinem Memories Backup gespeichert, das in den kostenpflichtigen Plänen enthalten ist. Wechsle deinen Plan, um einen Import zu verbinden.",
+  "memoryImporterUpgrade": "Plan wechseln",
+  "memoryImporterRequiresBackupTitle": "Memories Backup aktivieren",
+  "memoryImporterRequiresBackup": "Importierte Memories werden in deinem Memories Backup gespeichert. Aktiviere es, um einen Import zu verbinden.",
+  "memoryImporterEnableBackup": "Memories Backup aktivieren",
+  "memoryImporterConnectFailed": "Der Import konnte nicht verbunden werden. Prüfe deine Verbindung und versuche es erneut.",
+  "memoryImporterScanOnlyTitle": "Nutze die twonly-Kamera",
+  "memoryImporterScanOnly": "Ein Memories-Import lässt sich nur verbinden, indem du seinen Code mit der twonly-Kamera scannst. Öffne twonly und scanne dann den Code auf deinem Computer. Verbinde nie einen Code, den dir jemand geschickt hat.",
+  "memoryImporterHowTo": "Memories aus Snapchat und anderen Apps importieren: Öffne {origin} auf deinem Computer und scanne den dort angezeigten Code mit der twonly-Kamera.",
+  "memoryImporterTitle": "Memories importieren",
+  "memoryImporterFromOtherApps": "Aus anderen Apps importieren",
+  "memoryImporterOpenPage": "{origin} öffnen",
+  "memoryImporterNothingYet": "Noch nichts hochgeladen",
+  "memoryImporterActionFailed": "Das hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.",
+  "memoryImporterSectionConnected": "Verbundene Importe",
+  "memoryImporterSectionPast": "Abgeschlossene Importe",
+  "memoryImporterUploaded": "{count} Memories, {size}",
+  "memoryImporterActiveUntil": "Verbunden bis {date}",
+  "memoryImporterRemove": "Entfernen",
+  "memoryImporterRemoveTitle": "Diesen Import entfernen?",
+  "memoryImporterRemoveBody": "Der Computer kann nichts mehr hochladen. Bereits erhaltene Upload-Berechtigungen bleiben bis zu 5 Minuten gültig.",
+  "memoryImporterRemoveKeep": "Entfernen und Memories behalten",
+  "memoryImporterRemoveDelete": "Entfernen und alles Hochgeladene löschen",
+  "memoryImporterPastSummary": "{count} Memories · {range}",
+  "memoryImporterDeleteImport": "Alles aus diesem Import löschen",
+  "memoryImporterDeleteImportConfirm": "{count} Memories aus diesem Import von all deinen Geräten und aus der Cloud löschen? Das lässt sich nicht rückgängig machen.",
+  "memoryImporterUnreadable": "{count} importierte Elemente konnten nicht gelesen werden",
+  "memoryImporterUnreadableBody": "Sie wurden nicht zu deiner Galerie hinzugefügt, belegen aber Speicher. Lösche sie, um Platz freizugeben.",
+  "memoryImporterDelete": "Löschen",
+  "memoryImportProgressTitle": "Erinnerungen werden importiert",
+  "memoryImportProgressCount": "{done} von {total}",
+  "memoryImportProgressAdded": "{count, plural, =1{1 hinzugefügt} other{{count} hinzugefügt}}"
 }

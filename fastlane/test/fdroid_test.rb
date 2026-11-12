@@ -10,6 +10,9 @@ class GithubFinished < StandardError; end
 module UI
   def self.message(_message); end
   def self.important(_message); end
+  def self.input(_message)
+    "developer@example.com"
+  end
   def self.user_error!(message)
     raise LaneError, message
   end
@@ -19,9 +22,13 @@ module UI
 end
 
 class InternalLaneTest < Minitest::Test
+  NOTES = "- New: English release notes\n- Fix: Photo sharing"
+
   def setup
     @root = Dir.mktmpdir("twonly-internal-test")
     FileUtils.mkdir_p(File.join(@root, "fastlane"))
+    File.write(File.join(@root, "pubspec.yaml"), "version: 1.2.3+42\n")
+    File.write(File.join(@root, "CHANGELOG.md"), "## 1.2.30\n\nWrong version\n\n## [1.2.3]\n\n#{NOTES}\n\n## 1.2.2\n\nOld notes\n")
     @bundle = File.join(@root, "build/app/outputs/bundle/release/app-release.aab")
     FileUtils.mkdir_p(File.dirname(@bundle))
     File.write(@bundle, "stale bundle")
@@ -46,6 +53,24 @@ class InternalLaneTest < Minitest::Test
     assert_equal "fresh bundle", @lane.play_uploads.first.fetch(:bundle)
     assert_equal @bundle, @lane.play_uploads.first.fetch(:aab)
     assert_equal "internal", @lane.play_uploads.first.fetch(:track)
+    assert_equal({ "en-US/changelogs/default.txt" => NOTES }, @lane.play_uploads.first.fetch(:changelogs))
+    refute @lane.play_uploads.first.fetch(:skip_upload_changelogs)
+    refute File.exist?(@lane.play_uploads.first.fetch(:metadata_path))
+  end
+
+  def test_missing_or_unmatched_changelog_uses_the_same_fallback_as_fdroid
+    [nil, "## 1.2.30\n\nWrong version\n", "## 1.2.3\n\n"].each do |content|
+      changelog = File.join(@root, "CHANGELOG.md")
+      content ? File.write(changelog, content) : FileUtils.rm_f(changelog)
+      @lane.run_internal
+      assert_equal({ "en-US/changelogs/default.txt" => "Small bug fixes." }, @lane.play_uploads.last.fetch(:changelogs))
+    end
+  end
+
+  def test_failed_upload_cleans_up_temporary_metadata
+    @lane.fail_play_upload = true
+    assert_raises(LaneError) { @lane.run_internal }
+    refute File.exist?(@lane.play_uploads.last.fetch(:metadata_path))
   end
 
   def test_failed_build_never_uploads_an_existing_stale_bundle
@@ -54,6 +79,163 @@ class InternalLaneTest < Minitest::Test
     assert_match(/Build failed/, error.message)
     assert_empty @lane.play_uploads
     assert_equal "stale bundle", File.read(@bundle)
+  end
+end
+
+class TestflightLaneTest < Minitest::Test
+  def setup
+    @auth_environment = %w[PILOT_API_KEY_PATH APP_STORE_CONNECT_API_KEY_PATH PILOT_API_KEY APP_STORE_CONNECT_API_KEY PILOT_USERNAME FASTLANE_USER].to_h { |name| [name, ENV[name]] }
+    @auth_environment.each_key { |name| ENV.delete(name) }
+    @root = Dir.mktmpdir("twonly-testflight-test")
+    FileUtils.mkdir_p(File.join(@root, "fastlane"))
+    @ipa_dir = File.join(@root, "build/ios/ipa")
+    FileUtils.mkdir_p(@ipa_dir)
+    File.write(File.join(@ipa_dir, "old.ipa"), "stale IPA")
+    @lane = LaneHarness.new(@root)
+  end
+
+  def teardown
+    FileUtils.remove_entry(@root)
+    @auth_environment.each { |name, value| ENV[name] = value }
+  end
+
+  def test_builds_from_project_root_and_uploads_only_the_new_ipa
+    Dir.mktmpdir("twonly-testflight-caller") do |caller_dir|
+      Dir.chdir(caller_dir) do
+        @lane.run_beta
+        assert_equal File.realpath(caller_dir), Dir.pwd
+      end
+    end
+    assert_equal [File.realpath(@root)], @lane.ipa_build_directories
+    assert_equal 1, @lane.commands.length
+    assert_equal ["flutter", "build", "ipa", "--release", "--export-options-plist"], @lane.commands.first.first(5)
+    assert_match(/<key>signingStyle<\/key><string>automatic<\/string>/, @lane.ipa_export_options)
+    assert_match(/<key>teamID<\/key><string>CN332ZUGRP<\/string>/, @lane.ipa_export_options)
+    refute_match(/<key>(signingCertificate|provisioningProfiles)<\/key>/, @lane.ipa_export_options)
+    refute File.exist?(@lane.commands.first.last)
+    assert_equal 1, @lane.testflight_uploads.length
+    upload = @lane.testflight_uploads.first
+    assert_equal File.join(@ipa_dir, "twonly.ipa"), upload.fetch(:ipa)
+    assert_equal "fresh IPA", upload.fetch(:binary)
+    assert_equal "eu.twonly", upload.fetch(:app_identifier)
+    assert_equal "6743774441", upload.fetch(:apple_id)
+    assert_equal "developer@example.com", upload.fetch(:username)
+    assert upload.fetch(:skip_waiting_for_build_processing)
+    refute File.exist?(File.join(@ipa_dir, "old.ipa"))
+  end
+
+  def test_failed_build_does_not_upload
+    @lane.fail_build = true
+    assert_raises(LaneError) { @lane.run_beta }
+    assert_empty @lane.testflight_uploads
+  end
+
+  def test_successful_archive_without_an_export_does_not_upload_a_stale_ipa
+    @lane.ipa_exports = []
+    error = assert_raises(LaneError) { @lane.run_beta }
+    assert_match(/found 0/, error.message)
+    assert_empty @lane.testflight_uploads
+  end
+
+  def test_ambiguous_exports_do_not_upload
+    @lane.ipa_exports = ["one.ipa", "two.ipa"]
+    error = assert_raises(LaneError) { @lane.run_beta }
+    assert_match(/found 2/, error.message)
+    assert_empty @lane.testflight_uploads
+  end
+
+  def test_reexports_the_existing_archive_without_a_flutter_build
+    archive = File.join(@root, "build/ios/archive/Runner.xcarchive")
+    FileUtils.mkdir_p(archive)
+    @lane.run_beta(skip_build: "true")
+    command = @lane.commands.fetch(0)
+    assert_equal 1, @lane.commands.length
+    assert_equal ["xcodebuild", "-exportArchive"], command.first(2)
+    assert_equal archive, command[command.index("-archivePath") + 1]
+    assert_equal @ipa_dir, command[command.index("-exportPath") + 1]
+    assert_includes command, "-allowProvisioningUpdates"
+    assert_match(/<key>signingStyle<\/key><string>automatic<\/string>/, @lane.ipa_export_options)
+    assert_equal 1, @lane.testflight_uploads.length
+  end
+
+  def test_missing_archive_stops_before_export_or_upload
+    assert_raises(LaneError) { @lane.run_beta(skip_build: true) }
+    assert_empty @lane.commands
+    assert_empty @lane.testflight_uploads
+  end
+
+  def test_failed_reexport_stops_before_upload_and_cleans_up_options
+    FileUtils.mkdir_p(File.join(@root, "build/ios/archive/Runner.xcarchive"))
+    @lane.fail_build = true
+    assert_raises(LaneError) { @lane.run_beta(skip_build: true) }
+    assert_empty @lane.testflight_uploads
+    command = @lane.commands.fetch(0)
+    refute File.exist?(command[command.index("-exportOptionsPlist") + 1])
+  end
+
+  def test_passes_the_explicit_username_and_provider_to_the_uploader
+    @lane.run_beta(username: "uploader@example.com", provider_public_id: "provider-public-id")
+    assert_equal "uploader@example.com", @lane.testflight_uploads.last.fetch(:username)
+    assert_equal "provider-public-id", @lane.testflight_uploads.last.fetch(:provider_public_id)
+  end
+
+  def test_uses_the_username_from_the_environment
+    ENV['PILOT_USERNAME'] = "environment@example.com"
+    @lane.run_beta
+    assert_equal "environment@example.com", @lane.testflight_uploads.last.fetch(:username)
+  end
+
+  def test_api_key_authentication_does_not_receive_conflicting_username
+    ENV['PILOT_API_KEY_PATH'] = "/outside-repository/api-key.json"
+    ENV['PILOT_USERNAME'] = "unused@example.com"
+    @lane.run_beta
+    refute @lane.testflight_uploads.last.key?(:username)
+  end
+end
+
+class PromoteLaneTest < Minitest::Test
+  def setup
+    @lane = LaneHarness.new("/unused-project")
+  end
+
+  def test_promotes_to_each_destination_without_building_or_reading_a_bundle
+    { "closed" => "twonly-closed-tests", "open" => "beta", "production" => "production",
+      "my-closed-track" => "my-closed-track" }.each do |input, destination|
+      @lane.run_promote(track: input)
+      upload = @lane.play_uploads.last
+      assert_equal "internal", upload.fetch(:track)
+      assert_equal destination, upload.fetch(:track_promote_to)
+      assert_equal "completed", upload.fetch(:track_promote_release_status)
+      assert upload.fetch(:skip_upload_apk)
+      assert upload.fetch(:skip_upload_aab)
+      assert upload.fetch(:skip_upload_changelogs)
+      refute upload.key?(:aab)
+      refute upload.key?(:apk)
+    end
+    assert_equal 4, @lane.play_uploads.length
+    assert_empty @lane.commands
+  end
+
+  def test_defaults_to_all_destinations_and_always_promotes_from_internal
+    [{}, { track: nil }, { track: "" }, { track: "  " }, { track: "all" }].each do |options|
+      @lane.play_uploads.clear
+      @lane.run_promote(options)
+
+      assert_equal %w[twonly-closed-tests beta production], @lane.play_uploads.map { |upload| upload.fetch(:track_promote_to) }
+      @lane.play_uploads.each do |upload|
+        assert_equal "internal", upload.fetch(:track)
+        assert_equal "completed", upload.fetch(:track_promote_release_status)
+        %i[skip_upload_apk skip_upload_aab skip_upload_metadata skip_upload_changelogs skip_upload_images skip_upload_screenshots].each do |flag|
+          assert upload.fetch(flag)
+        end
+      end
+    end
+    assert_empty @lane.commands
+  end
+
+  def test_rejects_internal_as_a_destination_before_contacting_google_play
+    assert_raises(LaneError) { @lane.run_promote(track: "internal") }
+    assert_empty @lane.play_uploads
   end
 end
 
@@ -66,9 +248,12 @@ class LaneHarness
     end
   end
 
-  attr_accessor :view_result, :upload_failures, :fail_build
+  attr_accessor :view_result, :upload_failures, :fail_build, :fail_play_upload
+  attr_accessor :ipa_exports
   attr_reader :commands, :delays, :notes, :signature_results
   attr_reader :play_uploads, :bundle_build_directories
+  attr_reader :testflight_uploads, :ipa_build_directories
+  attr_reader :ipa_export_options
 
   def initialize(root)
     @commands = []
@@ -79,6 +264,9 @@ class LaneHarness
     @signature_results = {}
     @play_uploads = []
     @bundle_build_directories = []
+    @testflight_uploads = []
+    @ipa_build_directories = []
+    @ipa_exports = ["twonly.ipa"]
     source = File.read(File.expand_path("../Fastfile", __dir__))
     instance_eval(source, File.join(root, "fastlane", "Fastfile"))
   end
@@ -97,8 +285,25 @@ class LaneHarness
   def run_internal
     @lanes.fetch(:internal).call
   end
+  def run_promote(options = {})
+    @lanes.fetch(:promote).call(options)
+  end
+  def run_beta(options = {})
+    @lanes.fetch(:beta).call(options)
+  end
+  def upload_to_testflight(**options)
+    @testflight_uploads << options.merge(binary: File.read(options.fetch(:ipa)))
+  end
   def upload_to_play_store(**options)
-    @play_uploads << options.merge(bundle: File.read(options.fetch(:aab)))
+    if options[:metadata_path]
+      metadata_path = options[:metadata_path]
+      changelogs = Dir.glob(File.join(metadata_path, "**", "*.txt")).to_h do |file|
+        [file.delete_prefix("#{metadata_path}/"), File.read(file)]
+      end
+      options = options.merge(changelogs: changelogs)
+    end
+    @play_uploads << (options[:aab] ? options.merge(bundle: File.read(options[:aab])) : options)
+    raise LaneError, "Play upload failed" if fail_play_upload
   end
   def sleep(seconds)
     @delays << seconds
@@ -106,6 +311,16 @@ class LaneHarness
 
   def sh(*command, **_options, &block)
     @commands << command
+    if command.first(3) == ["flutter", "build", "ipa"] || command.first(2) == ["xcodebuild", "-exportArchive"]
+      @ipa_build_directories << Dir.pwd
+      options_flag = command.first == "flutter" ? "--export-options-plist" : "-exportOptionsPlist"
+      @ipa_export_options = File.read(command[command.index(options_flag) + 1])
+      raise LaneError, "Build failed" if fail_build
+      ipa_dir = File.join(Dir.pwd, "build/ios/ipa")
+      FileUtils.mkdir_p(ipa_dir)
+      ipa_exports.each { |name| File.write(File.join(ipa_dir, name), "fresh IPA") }
+      return "Built"
+    end
     if command == ["flutter build appbundle --release"]
       @bundle_build_directories << Dir.pwd
       raise LaneError, "Build failed" if fail_build
