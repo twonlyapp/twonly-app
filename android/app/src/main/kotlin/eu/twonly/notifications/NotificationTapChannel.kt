@@ -10,6 +10,7 @@ import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
 internal fun nativeNotificationId(value: String): Int = value.hashCode() and Int.MAX_VALUE
@@ -102,8 +103,11 @@ object NotificationTapChannel {
         }
     }
 
-    fun configure(flutterEngine: FlutterEngine, context: Context) {
-        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+    fun configure(flutterEngine: FlutterEngine, context: Context): () -> Unit =
+        configure(flutterEngine.dartExecutor.binaryMessenger, context)
+
+    internal fun configure(messenger: BinaryMessenger, context: Context): () -> Unit {
+        val channel = MethodChannel(messenger, CHANNEL)
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "setVisibleConversation" -> {
@@ -137,12 +141,16 @@ object NotificationTapChannel {
             }
         }
         this.channel = channel
-    }
-
-    fun detach() {
-        visibleConversationId = null
-        channel?.setMethodCallHandler(null)
-        channel = null
+        return {
+            // An old activity can detach after its replacement has configured
+            // the channel, including on the same retained engine. It must not
+            // unregister the replacement's method handler.
+            if (this.channel === channel) {
+                visibleConversationId = null
+                channel.setMethodCallHandler(null)
+                this.channel = null
+            }
+        }
     }
 
     /**

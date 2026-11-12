@@ -29,6 +29,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 
 class MainActivity : FlutterFragmentActivity() {
+    private var detachNotificationChannel: (() -> Unit)? = null
     override fun onStart() {
         super.onStart()
         NotificationTapChannel.setApplicationActive(true)
@@ -126,7 +127,8 @@ class MainActivity : FlutterFragmentActivity() {
         Keyring.initializeNdkContext(applicationContext)
 
 
-        NotificationTapChannel.configure(flutterEngine, applicationContext)
+        detachNotificationChannel?.invoke()
+        detachNotificationChannel = NotificationTapChannel.configure(flutterEngine, applicationContext)
         if (!flutterEngine.plugins.has(WidgetRuntimeChannel::class.java)) {
             flutterEngine.plugins.add(WidgetRuntimeChannel())
         }
@@ -220,7 +222,8 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
-        NotificationTapChannel.detach()
+        detachNotificationChannel?.invoke()
+        detachNotificationChannel = null
         WebxdcChannel.detach()
         super.cleanUpFlutterEngine(flutterEngine)
     }

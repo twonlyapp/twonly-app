@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' as media;
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
@@ -14,6 +15,47 @@ import '../helpers/native_database.dart';
 
 class _MemoriesApi extends NativeTestApi {
   StreamController<List<Contact>>? blockedContacts;
+  StreamController<media.MediaCollection>? migrationResume;
+  bool interruptMetadata = false;
+  int metadataAttempts = 0;
+
+  @override
+  Stream<media.MediaCollection> crateBridgeDatabaseMediafilesWatchMediaFiles({
+    required media.MediaQuery input,
+    required DatabaseWatch control,
+  }) {
+    if (input.filter == media.MediaFilter.pendingMigration &&
+        migrationResume != null) {
+      return migrationResume!.stream;
+    }
+    return super.crateBridgeDatabaseMediafilesWatchMediaFiles(
+      input: input,
+      control: control,
+    );
+  }
+
+  @override
+  Future<void> crateBridgeApiRustApiMediaStepFinished({
+    required String mediaId,
+    required String kind,
+  }) async {
+    if (kind != 'stored') {
+      return super.crateBridgeApiRustApiMediaStepFinished(
+        mediaId: mediaId,
+        kind: kind,
+      );
+    }
+    metadataAttempts++;
+    if (interruptMetadata) {
+      interruptMetadata = false;
+      migrationResume = StreamController<media.MediaCollection>();
+      throw StateError('attempted to acquire a connection on a closed pool');
+    }
+    await testDatabase.customStatement(
+      'UPDATE media_files SET stored_file_hash = ? WHERE media_id = ?',
+      ['hash', mediaId],
+    );
+  }
 
   // Reproduce the command failure from #4058. Gallery refreshes must use the
   // native watches that wait through pool suspension instead of these reads.
@@ -61,7 +103,11 @@ void main() {
     await TestDatabase.create();
     support = Directory.systemTemp.createTempSync('memories-refresh-test-');
     AppEnvironment.initTesting(customSupportDir: support.path);
-    api.blockedContacts = null;
+    api
+      ..blockedContacts = null
+      ..migrationResume = null
+      ..interruptMetadata = false
+      ..metadataAttempts = 0;
     await testDatabase.customStatement(
       "INSERT INTO contacts(user_id,username) VALUES (7,'Alice')",
     );
@@ -92,6 +138,51 @@ void main() {
     }
     expect(ready(), isTrue);
   }
+
+  test('metadata migration retries the interrupted file after resume', () async {
+    await testDatabase.customStatement(
+      "UPDATE media_files SET stored_file_hash = NULL WHERE media_id = 'memory'",
+    );
+    api.interruptMetadata = true;
+    service = MemoriesService();
+    addTearDown(service.dispose);
+    await waitFor(() => api.migrationResume?.hasListener ?? false);
+    expect(api.metadataAttempts, 1);
+    final pending = await api.crateBridgeDatabaseMediafilesListMediaFiles(
+      input: const media.MediaQuery(filter: media.MediaFilter.pendingMigration),
+      transaction: DatabaseSession(),
+    );
+    api.migrationResume!.add(
+      media.MediaCollection(
+        files: pending,
+        order: pending.map((f) => f.mediaId).toList(),
+      ),
+    );
+    await waitFor(() => api.metadataAttempts == 2);
+    await waitFor(() => !api.migrationResume!.hasListener);
+    final saved = await api.crateBridgeDatabaseMediafilesListMediaFiles(
+      input: const media.MediaQuery(filter: media.MediaFilter.pendingMigration),
+      transaction: DatabaseSession(),
+    );
+    expect(saved, isEmpty);
+    await api.migrationResume!.close();
+  });
+
+  test(
+    'disposing a paused migration cancels its wait without retrying',
+    () async {
+      await testDatabase.customStatement(
+        "UPDATE media_files SET stored_file_hash = NULL WHERE media_id = 'memory'",
+      );
+      api.interruptMetadata = true;
+      service = MemoriesService();
+      await waitFor(() => api.migrationResume?.hasListener ?? false);
+      service.dispose();
+      await waitFor(() => !api.migrationResume!.hasListener);
+      expect(api.metadataAttempts, 1);
+      await api.migrationResume!.close();
+    },
+  );
 
   test('gallery and sender load through lifecycle-aware snapshots', () async {
     service = MemoriesService();

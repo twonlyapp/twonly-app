@@ -100,6 +100,9 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
               padding: EdgeInsets.only(top: widget.topPadding),
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  if (constraints.maxHeight < thumbHeight) {
+                    return const SizedBox.shrink();
+                  }
                   final maxThumbOffset = constraints.maxHeight - thumbHeight;
 
                   return ExcludeSemantics(
@@ -117,7 +120,11 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
 
                           return Container(
                             alignment: AlignmentDirectional.topEnd,
-                            padding: EdgeInsets.only(top: thumbOffset),
+                            // The viewport can shrink before the next scroll
+                            // notification updates the retained thumb offset.
+                            padding: EdgeInsets.only(
+                              top: thumbOffset.clamp(0.0, maxThumbOffset),
+                            ),
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onVerticalDragStart: (_) =>
@@ -254,7 +261,10 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
           final padding = MediaQuery.paddingOf(context);
           final availableHeight =
               renderBox.size.height - padding.vertical - widget.topPadding;
-          final maxThumbOffset = availableHeight - thumbHeight;
+          final maxThumbOffset = (availableHeight - thumbHeight).clamp(
+            0.0,
+            double.infinity,
+          );
 
           final scrollExtent =
               scrollMetrics.pixels /
