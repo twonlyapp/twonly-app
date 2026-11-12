@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -87,6 +88,11 @@ class MemoriesCloudService {
   // Matches Rust's THUMBNAIL_MAX_BYTES and the server's thumbnail allowance.
   // The POST policy reserves another 100 KB for encryption and upload overhead.
   static const _maxThumbnailBytes = 300000;
+
+  // Encrypted response limits, including the server's 100 KB upload allowance.
+  // Keep in sync with memory_importer.rs and the largest single-media plan cap.
+  static const _maxThumbnailPayloadBytes = 400000;
+  static const int _maxFullMediaPayloadBytes = 100000000 + 100000;
 
   /// Cloud transfers allowed to run at once. Every gallery tile without a local
   /// file asks for one as it scrolls into view and nothing cancels the request
@@ -259,11 +265,30 @@ class MemoriesCloudService {
         } catch (_) {}
         if (downloadUrl == null || downloadUrl.isEmpty) return false;
 
+        final client = http.Client();
         try {
-          final response = await http.get(Uri.parse(downloadUrl));
+          final response = await client.send(
+            http.Request('GET', Uri.parse(downloadUrl)),
+          );
 
           if (response.statusCode == 200) {
-            return await _decryptFile(response.bodyBytes, targetPath);
+            final maxBytes = isThumbnail
+                ? _maxThumbnailPayloadBytes
+                : _maxFullMediaPayloadBytes;
+            if ((response.contentLength ?? 0) > maxBytes) {
+              throw StateError('Cloud media response exceeds $maxBytes bytes');
+            }
+            final payload = BytesBuilder(copy: false);
+            await for (final chunk in response.stream) {
+              // Check actual bytes even when Content-Length is absent or wrong.
+              if (chunk.length > maxBytes - payload.length) {
+                throw StateError(
+                  'Cloud media response exceeds $maxBytes bytes',
+                );
+              }
+              payload.add(chunk);
+            }
+            return await _decryptFile(payload.takeBytes(), targetPath);
           } else {
             Log.warn(
               'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
@@ -271,6 +296,8 @@ class MemoriesCloudService {
           }
         } catch (e) {
           Log.warn(e);
+        } finally {
+          client.close();
         }
         return false;
       });

@@ -46,6 +46,9 @@ const PAIRING_INFO: &[u8] = b"twonly importer pairing v1";
 const GRANT_VERSION: u32 = 1;
 const GRANT_SECONDS: i64 = 2 * 24 * 60 * 60;
 const THUMBNAIL_MAX_PAYLOAD: usize = 400_000;
+// Largest single-media plan cap plus the server's 100 KB upload allowance.
+// Keep in sync with MemoriesCloudService's encrypted response limit.
+const FULL_MEDIA_MAX_PAYLOAD: usize = 100_000_000 + 100_000;
 const THUMBNAIL_MAX_SIDE: u32 = 2048;
 const LIST_PAGE: i64 = 50;
 /// Far enough in the future to start the newest-first list at the top.
@@ -780,12 +783,16 @@ async fn record_failure(
     Ok(())
 }
 
-async fn add_imported(
-    ctx: &Arc<Context>, client: &reqwest::Client, media_id: &str, importer_id: &str, url: &str,
-) -> std::result::Result<(), String> {
-    // Network and decoding happen before the transaction; the transaction
-    // only writes.
-    let response = client
+async fn download_imported_thumbnail(
+    client: &reqwest::Client, url: &str,
+) -> std::result::Result<Vec<u8>, String> {
+    download_cloud_payload(client, url, THUMBNAIL_MAX_PAYLOAD).await
+}
+
+async fn download_cloud_payload(
+    client: &reqwest::Client, url: &str, max_payload: usize,
+) -> std::result::Result<Vec<u8>, String> {
+    let mut response = client
         .get(url)
         .send()
         .await
@@ -795,14 +802,32 @@ async fn add_imported(
     }
     if response
         .content_length()
-        .is_some_and(|n| n as usize > THUMBNAIL_MAX_PAYLOAD)
+        .is_some_and(|n| n > max_payload as u64)
     {
         return Err(OpenError::Malformed.reason().into());
     }
-    let payload = response
-        .bytes()
+    let mut payload = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
         .await
-        .map_err(|e| format!("download: {e}"))?;
+        .map_err(|e| format!("download: {e}"))?
+    {
+        // Enforce the limit even without Content-Length, before buffering
+        // another chunk. Subtraction avoids overflowing a length sum.
+        if chunk.len() > max_payload - payload.len() {
+            return Err(OpenError::Malformed.reason().into());
+        }
+        payload.extend_from_slice(&chunk);
+    }
+    Ok(payload)
+}
+
+async fn add_imported(
+    ctx: &Arc<Context>, client: &reqwest::Client, media_id: &str, importer_id: &str, url: &str,
+) -> std::result::Result<(), String> {
+    // Network and decoding happen before the transaction; the transaction
+    // only writes.
+    let payload = download_imported_thumbnail(client, url).await?;
     let opened = {
         let key_manager = ctx.key_manager.lock().await;
         open_imported_thumbnail(
@@ -899,14 +924,9 @@ pub async fn download_full_media(ctx: &Arc<Context>, media_id: &str) -> Result<V
         .timeout(std::time::Duration::from_secs(300))
         .build()
         .map_err(|e| error(&format!("http client: {e}")))?;
-    let payload = client
-        .get(url)
-        .send()
+    let payload = download_cloud_payload(&client, &url, FULL_MEDIA_MAX_PAYLOAD)
         .await
-        .map_err(|e| error(&e.to_string()))?
-        .bytes()
-        .await
-        .map_err(|e| error(&e.to_string()))?;
+        .map_err(|e| error(&e))?;
     let key_manager = ctx.key_manager.lock().await;
     let (plain, _, mut media_key) =
         open_cloud_payload(&key_manager.main_key, importer_id.as_deref(), &payload)
@@ -919,6 +939,240 @@ pub async fn download_full_media(ctx: &Arc<Context>, media_id: &str) -> Result<V
 mod tests {
     use super::*;
     use hmac::{Hmac, Mac};
+
+    /// An unfinished response stays open so oversized bodies must be rejected
+    /// while streaming, rather than at EOF or on the HTTP client's timeout.
+    async fn download_test_thumbnail(
+        headers: &str, body: &[u8], keep_open: bool,
+    ) -> std::result::Result<Vec<u8>, String> {
+        download_test_payload(headers, body, keep_open, THUMBNAIL_MAX_PAYLOAD).await
+    }
+
+    async fn download_test_payload(
+        headers: &str, body: &[u8], keep_open: bool, max_payload: usize,
+    ) -> std::result::Result<Vec<u8>, String> {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/thumbnail", listener.local_addr().unwrap());
+        let mut response = headers.as_bytes().to_vec();
+        response.extend_from_slice(body);
+        let server = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let mut socket = BufReader::new(socket);
+            loop {
+                let mut line = String::new();
+                assert_ne!(socket.read_line(&mut line).await.unwrap(), 0);
+                if line == "\r\n" {
+                    break;
+                }
+            }
+            socket.get_mut().write_all(&response).await.unwrap();
+            if keep_open {
+                std::future::pending::<()>().await;
+            }
+        });
+        let client = crate::api::http::client_builder()
+            .no_proxy()
+            .build()
+            .unwrap();
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            download_cloud_payload(&client, &url, max_payload),
+        )
+        .await;
+        server.abort();
+        let _ = server.await;
+        result.expect("download must finish without waiting for the server to close")
+    }
+
+    fn chunked_body(payload: &[u8]) -> Vec<u8> {
+        let mut body = Vec::new();
+        for chunk in payload.chunks(16_000) {
+            body.extend_from_slice(format!("{:x}\r\n", chunk.len()).as_bytes());
+            body.extend_from_slice(chunk);
+            body.extend_from_slice(b"\r\n");
+        }
+        body
+    }
+
+    #[tokio::test]
+    async fn thumbnail_download_accepts_bodies_up_to_the_limit() {
+        for length in [0, THUMBNAIL_MAX_PAYLOAD - 1, THUMBNAIL_MAX_PAYLOAD] {
+            let payload = vec![42; length];
+            let headers = format!("HTTP/1.1 200 OK\r\nContent-Length: {length}\r\n\r\n");
+            assert_eq!(
+                download_test_thumbnail(&headers, &payload, false)
+                    .await
+                    .unwrap(),
+                payload
+            );
+            let mut chunked = chunked_body(&payload);
+            chunked.extend_from_slice(b"0\r\n\r\n");
+            assert_eq!(
+                download_test_thumbnail(
+                    "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n",
+                    &chunked,
+                    false,
+                )
+                .await
+                .unwrap(),
+                payload
+            );
+            assert_eq!(
+                download_test_thumbnail("HTTP/1.1 200 OK\r\n\r\n", &payload, false)
+                    .await
+                    .unwrap(),
+                payload
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn thumbnail_download_rejects_oversized_declared_lengths_before_reading() {
+        // The second length would wrap to zero if cast to a 32-bit usize.
+        for length in [THUMBNAIL_MAX_PAYLOAD as u64 + 1, u64::from(u32::MAX) + 1] {
+            let headers = format!("HTTP/1.1 200 OK\r\nContent-Length: {length}\r\n\r\n");
+            assert_eq!(
+                download_test_thumbnail(&headers, &[], true)
+                    .await
+                    .unwrap_err(),
+                OpenError::Malformed.reason()
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn thumbnail_download_rejects_oversized_chunked_body_before_eof() {
+        // No terminating chunk: the server continues to hold the response open.
+        let body = chunked_body(&vec![42; THUMBNAIL_MAX_PAYLOAD + 1]);
+        assert_eq!(
+            download_test_thumbnail(
+                "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n",
+                &body,
+                true,
+            )
+            .await
+            .unwrap_err(),
+            OpenError::Malformed.reason()
+        );
+    }
+
+    #[tokio::test]
+    async fn thumbnail_download_rejects_oversized_lengthless_body_before_eof() {
+        assert_eq!(
+            download_test_thumbnail(
+                "HTTP/1.1 200 OK\r\n\r\n",
+                &vec![42; THUMBNAIL_MAX_PAYLOAD + 1],
+                true,
+            )
+            .await
+            .unwrap_err(),
+            OpenError::Malformed.reason()
+        );
+    }
+
+    #[tokio::test]
+    async fn thumbnail_download_preserves_status_and_body_errors() {
+        assert_eq!(
+            download_test_thumbnail("HTTP/1.1 503 Service Unavailable\r\n\r\n", &[], true)
+                .await
+                .unwrap_err(),
+            "download status 503 Service Unavailable"
+        );
+        assert!(download_test_thumbnail(
+            "HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\n",
+            b"short",
+            false
+        )
+        .await
+        .unwrap_err()
+        .starts_with("download: "));
+    }
+
+    #[tokio::test]
+    async fn full_media_download_rejects_oversized_declared_lengths_before_reading() {
+        for length in [FULL_MEDIA_MAX_PAYLOAD as u64 + 1, u64::from(u32::MAX) + 1] {
+            let headers = format!("HTTP/1.1 200 OK\r\nContent-Length: {length}\r\n\r\n");
+            assert_eq!(
+                download_test_payload(&headers, &[], true, FULL_MEDIA_MAX_PAYLOAD)
+                    .await
+                    .unwrap_err(),
+                OpenError::Malformed.reason()
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn full_media_download_accepts_payloads_larger_than_thumbnails() {
+        let payload = vec![42; THUMBNAIL_MAX_PAYLOAD + 1];
+        assert_eq!(
+            download_test_payload(
+                "HTTP/1.1 200 OK\r\n\r\n",
+                &payload,
+                false,
+                FULL_MEDIA_MAX_PAYLOAD,
+            )
+            .await
+            .unwrap(),
+            payload
+        );
+    }
+
+    #[tokio::test]
+    async fn full_media_download_rejects_oversized_stream_before_eof() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/full", listener.local_addr().unwrap());
+        let server = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let mut socket = BufReader::new(socket);
+            loop {
+                let mut line = String::new();
+                assert_ne!(socket.read_line(&mut line).await.unwrap(), 0);
+                if line == "\r\n" {
+                    break;
+                }
+            }
+            socket
+                .get_mut()
+                .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+                .await
+                .unwrap();
+            // Generate the oversized response without storing it on the server.
+            let chunk = vec![42; 64_000];
+            let mut remaining = FULL_MEDIA_MAX_PAYLOAD + 1;
+            while remaining > 0 {
+                let length = remaining.min(chunk.len());
+                socket
+                    .get_mut()
+                    .write_all(format!("{length:x}\r\n").as_bytes())
+                    .await
+                    .unwrap();
+                socket.get_mut().write_all(&chunk[..length]).await.unwrap();
+                socket.get_mut().write_all(b"\r\n").await.unwrap();
+                remaining -= length;
+            }
+            // No terminating chunk: rejection must happen before EOF.
+            std::future::pending::<()>().await;
+        });
+        let client = crate::api::http::client_builder()
+            .no_proxy()
+            .build()
+            .unwrap();
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            download_cloud_payload(&client, &url, FULL_MEDIA_MAX_PAYLOAD),
+        )
+        .await;
+        server.abort();
+        let _ = server.await;
+        assert_eq!(
+            result.expect("must reject before EOF").unwrap_err(),
+            OpenError::Malformed.reason()
+        );
+    }
 
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
