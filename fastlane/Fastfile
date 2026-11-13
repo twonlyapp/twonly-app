@@ -151,7 +151,8 @@ platform :android do
 
   desc "Build the application locally and publish it to GitHub and F-Droid"
   lane :fdroid do |options|
-    version, release_notes = release_notes_for(File.expand_path("..", __dir__))
+    project_root = File.expand_path("..", __dir__)
+    version, release_notes = release_notes_for(project_root)
     tag_name = "v#{version}"
     UI.message("Extracted version: #{version} (tag: #{tag_name})")
 
@@ -293,8 +294,7 @@ platform :android do
     if File.exist?(update_script)
       UI.message("Executing F-Droid update script...")
       Dir.chdir(fdroid_dir) do
-        app_dir = File.expand_path("..", __dir__)
-        sh("chmod +x ./update.sh && TWONLY_APP_DIR=#{Shellwords.escape(app_dir)} ./update.sh")
+        sh("chmod +x ./update.sh && TWONLY_APP_DIR=#{Shellwords.escape(project_root)} ./update.sh")
       end
     else
       UI.important("F-Droid update script not found at #{update_script}")

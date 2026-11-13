@@ -3,7 +3,7 @@ require "fileutils"
 require "tmpdir"
 
 # Exercise the actual lanes with temporary projects and fake command results.
-# No command is executed and successful cases stop before F-Droid deployment.
+# No command is executed; F-Droid files are redirected to the temporary project.
 class LaneError < StandardError; end
 class GithubFinished < StandardError; end
 
@@ -25,7 +25,7 @@ class InternalLaneTest < Minitest::Test
   NOTES = "- New: English release notes\n- Fix: Photo sharing"
 
   def setup
-    @root = Dir.mktmpdir("twonly-internal-test")
+    @root = File.realpath(Dir.mktmpdir("twonly-internal-test"))
     FileUtils.mkdir_p(File.join(@root, "fastlane"))
     File.write(File.join(@root, "pubspec.yaml"), "version: 1.2.3+42\n")
     File.write(File.join(@root, "CHANGELOG.md"), "## 1.2.30\n\nWrong version\n\n## [1.2.3]\n\n#{NOTES}\n\n## 1.2.2\n\nOld notes\n")
@@ -86,7 +86,7 @@ class TestflightLaneTest < Minitest::Test
   def setup
     @auth_environment = %w[PILOT_API_KEY_PATH APP_STORE_CONNECT_API_KEY_PATH PILOT_API_KEY APP_STORE_CONNECT_API_KEY PILOT_USERNAME FASTLANE_USER].to_h { |name| [name, ENV[name]] }
     @auth_environment.each_key { |name| ENV.delete(name) }
-    @root = Dir.mktmpdir("twonly-testflight-test")
+    @root = File.realpath(Dir.mktmpdir("twonly-testflight-test"))
     FileUtils.mkdir_p(File.join(@root, "fastlane"))
     @ipa_dir = File.join(@root, "build/ios/ipa")
     FileUtils.mkdir_p(@ipa_dir)
@@ -254,8 +254,10 @@ class LaneHarness
   attr_reader :play_uploads, :bundle_build_directories
   attr_reader :testflight_uploads, :ipa_build_directories
   attr_reader :ipa_export_options
+  attr_reader :fdroid_update_directories
 
   def initialize(root)
+    @root = root
     @commands = []
     @delays = []
     @lanes = {}
@@ -267,8 +269,12 @@ class LaneHarness
     @testflight_uploads = []
     @ipa_build_directories = []
     @ipa_exports = ["twonly.ipa"]
+    @fdroid_update_directories = []
     source = File.read(File.expand_path("../Fastfile", __dir__))
-    instance_eval(source, File.join(root, "fastlane", "Fastfile"))
+    source = source.gsub("/Users/tobi/Documents/drive/twonly/F-Droid", File.join(root, "deployment/F-Droid"))
+    # Fastlane evaluates Fastfile with a relative filename. In that case,
+    # __dir__ follows the working directory when a lane changes directories.
+    instance_eval(source, "Fastfile")
   end
 
   def default_platform(_platform); end
@@ -280,16 +286,16 @@ class LaneHarness
     @lanes[name] = block
   end
   def run(options = {})
-    @lanes.fetch(:fdroid).call(options)
+    Dir.chdir(File.join(@root, "fastlane")) { @lanes.fetch(:fdroid).call(options) }
   end
   def run_internal
-    @lanes.fetch(:internal).call
+    Dir.chdir(File.join(@root, "fastlane")) { @lanes.fetch(:internal).call }
   end
   def run_promote(options = {})
     @lanes.fetch(:promote).call(options)
   end
   def run_beta(options = {})
-    @lanes.fetch(:beta).call(options)
+    Dir.chdir(File.join(@root, "fastlane")) { @lanes.fetch(:beta).call(options) }
   end
   def upload_to_testflight(**options)
     @testflight_uploads << options.merge(binary: File.read(options.fetch(:ipa)))
@@ -311,6 +317,13 @@ class LaneHarness
 
   def sh(*command, **_options, &block)
     @commands << command
+    if command.first.start_with?("rm -f ")
+      return ""
+    end
+    if command.first.start_with?("chmod +x ./update.sh && TWONLY_APP_DIR=")
+      @fdroid_update_directories << Dir.pwd
+      return "Updated"
+    end
     if command.first(3) == ["flutter", "build", "ipa"] || command.first(2) == ["xcodebuild", "-exportArchive"]
       @ipa_build_directories << Dir.pwd
       options_flag = command.first == "flutter" ? "--export-options-plist" : "-exportOptionsPlist"
@@ -359,7 +372,8 @@ class FdroidLaneTest < Minitest::Test
   NOTES = "- Fix: multiline release notes\n- Literal `$(text)` and 'quotes'"
 
   def setup
-    @root = Dir.mktmpdir("twonly-fdroid-test")
+    @temp_root = File.realpath(Dir.mktmpdir("twonly-fdroid-test"))
+    @root = File.join(@temp_root, "app with spaces")
     FileUtils.mkdir_p(File.join(@root, "fastlane"))
     FileUtils.mkdir_p(File.join(@root, "android"))
     File.write(File.join(@root, "android/key.github.properties"), "github fixture")
@@ -379,7 +393,7 @@ class FdroidLaneTest < Minitest::Test
   end
 
   def teardown
-    FileUtils.remove_entry(@root)
+    FileUtils.remove_entry(@temp_root)
   end
 
   def commands(action)
@@ -394,6 +408,23 @@ class FdroidLaneTest < Minitest::Test
     assert_equal [@apksigner, @apksigner, "gh", "gh", "gh"], @lane.commands.map(&:first)
     assert_equal Dir.glob(File.join(@apk_dir, "*.apk")), @lane.commands.first(2).map(&:last)
     assert @lane.commands.first(2).all? { |command| command[1..2] == ["verify", "--print-certs"] }
+  end
+
+  def test_fdroid_update_receives_the_project_root_after_changing_directories
+    original_success = UI.method(:success)
+    UI.define_singleton_method(:success) { |_message| }
+    fdroid_dir = File.join(@root, "deployment/F-Droid")
+    FileUtils.mkdir_p(fdroid_dir)
+    File.write(File.join(fdroid_dir, "update.sh"), "fixture update script")
+
+    @lane.run(skip_build: true)
+
+    assert_equal [File.realpath(fdroid_dir)], @lane.fdroid_update_directories
+    assert_equal ["chmod +x ./update.sh && TWONLY_APP_DIR=#{Shellwords.escape(@root)} ./update.sh"], @lane.commands.last
+    assert_equal %w[eu.twonly_v1.2.3-app-arm64-v8a-release.apk eu.twonly_v1.2.3-app-armeabi-v7a-release.apk],
+                 Dir.children(File.join(fdroid_dir, "repo")).sort
+  ensure
+    UI.define_singleton_method(:success, original_success)
   end
 
   def test_missing_release_is_created_with_exact_notes_before_uploads
