@@ -14,6 +14,7 @@ pub struct ReceivedStories {
 pub struct OwnStorySummary {
     pub media_id: String,
     pub posted_at: i64,
+    pub additional_message_data: Option<Vec<u8>>,
     pub recipient_count: i64,
     pub viewer_count: i64,
 }

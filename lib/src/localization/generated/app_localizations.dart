@@ -706,6 +706,12 @@ abstract class AppLocalizations {
   /// **'Last update: {time}'**
   String liveLocationLastUpdate(String time);
 
+  /// No description provided for @includeMediaLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Include location'**
+  String get includeMediaLocation;
+
   /// No description provided for @locationFilterTitle.
   ///
   /// In en, this message translates to:
@@ -2727,6 +2733,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User has been reported.'**
   String get userGotReported;
+
+  /// No description provided for @chatDeletionPresetHour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get chatDeletionPresetHour;
+
+  /// No description provided for @chatDeletionPresetDay.
+  ///
+  /// In en, this message translates to:
+  /// **'1 day'**
+  String get chatDeletionPresetDay;
+
+  /// No description provided for @chatDeletionPresetWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'1 week'**
+  String get chatDeletionPresetWeek;
+
+  /// No description provided for @chatDeletionPresetMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get chatDeletionPresetMonth;
+
+  /// No description provided for @chatDeletionPresetYear.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get chatDeletionPresetYear;
+
+  /// No description provided for @chatDeletionCustomChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get chatDeletionCustomChoice;
+
+  /// No description provided for @customChatDeletionTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom timer'**
+  String get customChatDeletionTimer;
+
+  /// No description provided for @chatDeletionDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get chatDeletionDuration;
+
+  /// No description provided for @chatDeletionUnitHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get chatDeletionUnitHours;
+
+  /// No description provided for @chatDeletionUnitDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get chatDeletionUnitDays;
+
+  /// No description provided for @chatDeletionUnitWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Weeks'**
+  String get chatDeletionUnitWeeks;
+
+  /// No description provided for @chatDeletionUnitMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get chatDeletionUnitMonths;
+
+  /// No description provided for @chatDeletionDurationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid duration.'**
+  String get chatDeletionDurationInvalid;
 
   /// No description provided for @deleteChatAfter.
   ///
@@ -6705,6 +6789,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 added} other{{count} added}}'**
   String memoryImportProgressAdded(int count);
+
+  /// No description provided for @storyAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get storyAdd;
+
+  /// No description provided for @storyPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post story'**
+  String get storyPost;
+
+  /// No description provided for @storyAvailableFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Available for'**
+  String get storyAvailableFor;
+
+  /// No description provided for @story24Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get story24Hours;
+
+  /// No description provided for @storyDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String storyDays(int count);
+
+  /// No description provided for @storyUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Until…'**
+  String get storyUntil;
+
+  /// No description provided for @storyAvailableUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Available until {deadline}'**
+  String storyAvailableUntil(String deadline);
+
+  /// No description provided for @storyChooseNewDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a future deadline within the next 30 days.'**
+  String get storyChooseNewDeadline;
+
+  /// No description provided for @storyIncludedOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Included on Story map'**
+  String get storyIncludedOnMap;
+
+  /// No description provided for @storyMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Story map'**
+  String get storyMapTitle;
+
+  /// No description provided for @storyMapNoLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories with a shared location appear here until they expire.'**
+  String get storyMapNoLocations;
+
+  /// No description provided for @storyMapNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories in this area.'**
+  String get storyMapNoResults;
+
+  /// No description provided for @storyMapVisibleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 story in this area} other{{count} stories in this area}}'**
+  String storyMapVisibleCount(int count);
 }
 
 class _AppLocalizationsDelegate

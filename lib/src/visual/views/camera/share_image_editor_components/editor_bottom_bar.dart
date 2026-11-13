@@ -42,11 +42,14 @@ class EditorBottomBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SaveToGalleryButton(
-            storeImageAsOriginal: storeImageAsOriginal,
-            mediaService: mediaService,
-            displayButtonLabel: !hasFixedReceiver,
-            isLoading: isLoadingImage,
+          Tooltip(
+            message: context.lang.shareImagedEditorSaveImage,
+            child: SaveToGalleryButton(
+              storeImageAsOriginal: storeImageAsOriginal,
+              mediaService: mediaService,
+              displayButtonLabel: !hasFixedReceiver,
+              isLoading: isLoadingImage,
+            ),
           ),
           if (hasFixedReceiver) ...[
             const SizedBox(width: 10),
@@ -57,7 +60,7 @@ class EditorBottomBar extends StatelessWidget {
             ),
           ],
           SizedBox(width: hasFixedReceiver ? 10 : 20),
-          IntrinsicWidth(
+          Flexible(
             child: MyButton(
               variant: MyButtonVariant.primaryMiddle,
               onPressed: isSending ? null : onSend,
@@ -78,10 +81,14 @@ class EditorBottomBar extends StatelessWidget {
                   else
                     const FaIcon(FontAwesomeIcons.solidPaperPlane, size: 14),
                   const SizedBox(width: 8),
-                  Text(
-                    hasFixedReceiver
-                        ? substringBy(sendToGroup!.groupName, 15)
-                        : context.lang.shareImagedEditorShareWith,
+                  Flexible(
+                    child: Text(
+                      hasFixedReceiver
+                          ? substringBy(sendToGroup!.groupName, 15)
+                          : context.lang.shareImagedEditorShareWith,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),

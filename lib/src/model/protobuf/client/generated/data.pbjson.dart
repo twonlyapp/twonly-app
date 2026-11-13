@@ -166,6 +166,15 @@ const AdditionalMessageData$json = {
       '10': 'photoLocation',
       '17': true
     },
+    {
+      '1': 'story_expires_at_ms',
+      '3': 15,
+      '4': 1,
+      '5': 3,
+      '9': 12,
+      '10': 'storyExpiresAtMs',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
@@ -181,6 +190,7 @@ const AdditionalMessageData$json = {
     {'1': '_live_location'},
     {'1': '_vacation'},
     {'1': '_photo_location'},
+    {'1': '_story_expires_at_ms'},
   ],
 };
 
@@ -219,15 +229,17 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQESOwoNbGl2ZV9sb2NhdGlvbhgMIAEoCzIRLk'
     'xpdmVMb2NhdGlvbkRhdGFICVIMbGl2ZUxvY2F0aW9uiAEBEi4KCHZhY2F0aW9uGA0gASgLMg0u'
     'VmFjYXRpb25EYXRhSApSCHZhY2F0aW9uiAEBEj4KDnBob3RvX2xvY2F0aW9uGA4gASgLMhIuUG'
-    'hvdG9Mb2NhdGlvbkRhdGFIC1INcGhvdG9Mb2NhdGlvbogBASLuAQoEVHlwZRIICgRMSU5LEAAS'
-    'DAoIQ09OVEFDVFMQARIaChZSRVNUT1JFRF9GTEFNRV9DT1VOVEVSEAISEgoOQVNLX0FCT1VUX1'
-    'VTRVIQAxIOCgpXRUJYRENfQVBQEAQSEQoNV0VCWERDX1VQREFURRAFEg8KC1dFQlhEQ19TRU5U'
-    'EAYSDwoLV0VCWERDX1NZTkMQBxIXChNXRUJYRENfU1lOQ19SRVFVRVNUEAgSCwoHU1RJQ0tFUh'
-    'AJEhEKDUxJVkVfTE9DQVRJT04QChIMCghWQUNBVElPThALEhIKDlBIT1RPX0xPQ0FUSU9OEAxC'
-    'BwoFX2xpbmtCGQoXX3Jlc3RvcmVkX2ZsYW1lX2NvdW50ZXJCFAoSX2Fza19hYm91dF91c2VyX2'
-    'lkQg0KC193ZWJ4ZGNfYXBwQhAKDl93ZWJ4ZGNfdXBkYXRlQhAKDl93ZWJ4ZGNfb3JpZ2luQg4K'
-    'DF93ZWJ4ZGNfc3luY0IWChRfd2VieGRjX3N5bmNfcmVxdWVzdEIKCghfc3RpY2tlckIQCg5fbG'
-    'l2ZV9sb2NhdGlvbkILCglfdmFjYXRpb25CEQoPX3Bob3RvX2xvY2F0aW9u');
+    'hvdG9Mb2NhdGlvbkRhdGFIC1INcGhvdG9Mb2NhdGlvbogBARIyChNzdG9yeV9leHBpcmVzX2F0'
+    'X21zGA8gASgDSAxSEHN0b3J5RXhwaXJlc0F0TXOIAQEi7gEKBFR5cGUSCAoETElOSxAAEgwKCE'
+    'NPTlRBQ1RTEAESGgoWUkVTVE9SRURfRkxBTUVfQ09VTlRFUhACEhIKDkFTS19BQk9VVF9VU0VS'
+    'EAMSDgoKV0VCWERDX0FQUBAEEhEKDVdFQlhEQ19VUERBVEUQBRIPCgtXRUJYRENfU0VOVBAGEg'
+    '8KC1dFQlhEQ19TWU5DEAcSFwoTV0VCWERDX1NZTkNfUkVRVUVTVBAIEgsKB1NUSUNLRVIQCRIR'
+    'Cg1MSVZFX0xPQ0FUSU9OEAoSDAoIVkFDQVRJT04QCxISCg5QSE9UT19MT0NBVElPThAMQgcKBV'
+    '9saW5rQhkKF19yZXN0b3JlZF9mbGFtZV9jb3VudGVyQhQKEl9hc2tfYWJvdXRfdXNlcl9pZEIN'
+    'Cgtfd2VieGRjX2FwcEIQCg5fd2VieGRjX3VwZGF0ZUIQCg5fd2VieGRjX29yaWdpbkIOCgxfd2'
+    'VieGRjX3N5bmNCFgoUX3dlYnhkY19zeW5jX3JlcXVlc3RCCgoIX3N0aWNrZXJCEAoOX2xpdmVf'
+    'bG9jYXRpb25CCwoJX3ZhY2F0aW9uQhEKD19waG90b19sb2NhdGlvbkIWChRfc3RvcnlfZXhwaX'
+    'Jlc19hdF9tcw==');
 
 @$core.Deprecated('Use photoLocationDataDescriptor instead')
 const PhotoLocationData$json = {
@@ -268,11 +280,21 @@ const PhotoLocationData$json = {
       '10': 'mapZoom',
       '17': true
     },
+    {
+      '1': 'hide_filter',
+      '3': 12,
+      '4': 1,
+      '5': 8,
+      '9': 3,
+      '10': 'hideFilter',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_map_latitude'},
     {'1': '_map_longitude'},
     {'1': '_map_zoom'},
+    {'1': '_hide_filter'},
   ],
 };
 
@@ -284,8 +306,9 @@ final $typed_data.Uint8List photoLocationDataDescriptor = $convert.base64Decode(
     'dtYXBMZWZ0EhcKB21hcF90b3AYBiABKAFSBm1hcFRvcBIbCgltYXBfd2lkdGgYByABKAFSCG1h'
     'cFdpZHRoEh0KCm1hcF9oZWlnaHQYCCABKAFSCW1hcEhlaWdodBImCgxtYXBfbGF0aXR1ZGUYCS'
     'ABKAFIAFILbWFwTGF0aXR1ZGWIAQESKAoNbWFwX2xvbmdpdHVkZRgKIAEoAUgBUgxtYXBMb25n'
-    'aXR1ZGWIAQESHgoIbWFwX3pvb20YCyABKAFIAlIHbWFwWm9vbYgBAUIPCg1fbWFwX2xhdGl0dW'
-    'RlQhAKDl9tYXBfbG9uZ2l0dWRlQgsKCV9tYXBfem9vbQ==');
+    'aXR1ZGWIAQESHgoIbWFwX3pvb20YCyABKAFIAlIHbWFwWm9vbYgBARIkCgtoaWRlX2ZpbHRlch'
+    'gMIAEoCEgDUgpoaWRlRmlsdGVyiAEBQg8KDV9tYXBfbGF0aXR1ZGVCEAoOX21hcF9sb25naXR1'
+    'ZGVCCwoJX21hcF96b29tQg4KDF9oaWRlX2ZpbHRlcg==');
 
 @$core.Deprecated('Use vacationDataDescriptor instead')
 const VacationData$json = {

@@ -323,14 +323,18 @@ class MemoriesService {
             _onMediaFilesChanged,
           );
 
-      final pendingFiles = await rust_mediafiles.listMediaFiles(
-        input: const db_mediafiles.MediaQuery(
-          filter: db_mediafiles.MediaFilter.pendingMigration,
-        ),
-        transaction: currentDatabaseSession(),
+      final pendingFiles = await _readSnapshot(
+        (control) => rust_mediafiles
+            .watchMediaFiles(
+              input: const db_mediafiles.MediaQuery(
+                filter: db_mediafiles.MediaFilter.pendingMigration,
+              ),
+              control: control,
+            )
+            .map(orderedMediaFiles),
       );
 
-      if (_disposed) return;
+      if (_disposed || pendingFiles == null) return;
       if (pendingFiles.isNotEmpty) {
         _currentState = _currentState.copyWith(
           filesToMigrate: pendingFiles.length,
@@ -346,12 +350,43 @@ class MemoriesService {
     }
   }
 
+  /// Migration steps are idempotent. A foreground pool closing midway through
+  /// a step leaves it pending, so wait for a lifecycle-aware snapshot and retry
+  /// the same file instead of reporting every remaining file as broken.
+  Future<bool> _completeMigrationStep(
+    Future<void> Function() action,
+    String description,
+  ) async {
+    while (!_disposed) {
+      try {
+        await action();
+        return !_disposed;
+      } catch (error, stackTrace) {
+        if (!isBackgroundCancellation(error)) {
+          Log.error(description, error: error, stackTrace: stackTrace);
+          return !_disposed;
+        }
+        Log.info('Memories migration paused until the database reopens');
+        final ready = await _readSnapshot(
+          (control) => rust_mediafiles.watchMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.pendingMigration,
+            ),
+            control: control,
+          ),
+        );
+        if (ready == null) return false;
+      }
+    }
+    return false;
+  }
+
   Future<void> _processMigrationQueue(List<MediaFile> pendingFiles) async {
     try {
       // Phase 1: Create thumbnails first so files can be shown in the
       // gallery immediately, without waiting for heavier operations.
       for (final mediaFile in pendingFiles) {
-        try {
+        final completed = await _completeMigrationStep(() async {
           final mediaService = MediaFileService(mediaFile);
 
           if (!mediaService.mediaFile.hasThumbnail) {
@@ -366,11 +401,8 @@ class MemoriesService {
               await mediaService.createThumbnail();
             }
           }
-        } catch (e) {
-          Log.error(
-            'Error creating thumbnail for ${mediaFile.mediaId}: $e',
-          );
-        }
+        }, 'Error creating thumbnail for ${mediaFile.mediaId}');
+        if (!completed) return;
         _updateMigrationCount(_currentState.filesToMigrate - 1);
       }
 
@@ -394,7 +426,7 @@ class MemoriesService {
     List<MediaFile> pendingFiles,
   ) async {
     for (final mediaFile in pendingFiles) {
-      try {
+      final completed = await _completeMigrationStep(() async {
         final mediaService = MediaFileService(mediaFile);
 
         if (mediaService.mediaFile.storedFileHash == null) {
@@ -410,32 +442,25 @@ class MemoriesService {
         }
 
         if (mediaService.mediaFile.blurhash == null) {
-          try {
-            final imageFile = mediaService.thumbnailPath.existsSync()
-                ? mediaService.thumbnailPath
-                : mediaService.originalPath;
-            if (imageFile.existsSync()) {
-              final bytes = await imageFile.readAsBytes();
-              final blurhash = await compute(_calculateBlurhash, bytes);
-              if (blurhash != null) {
-                await rust_mediafiles.updateMediaFiles(
-                  id: mediaFile.mediaId,
-                  patch: MediaFilePatch(
-                    blurhash: NullableText(value: blurhash),
-                  ),
-                  transaction: currentDatabaseSession(),
-                );
-              }
+          final imageFile = mediaService.thumbnailPath.existsSync()
+              ? mediaService.thumbnailPath
+              : mediaService.originalPath;
+          if (imageFile.existsSync()) {
+            final bytes = await imageFile.readAsBytes();
+            final blurhash = await compute(_calculateBlurhash, bytes);
+            if (blurhash != null) {
+              await rust_mediafiles.updateMediaFiles(
+                id: mediaFile.mediaId,
+                patch: MediaFilePatch(
+                  blurhash: NullableText(value: blurhash),
+                ),
+                transaction: currentDatabaseSession(),
+              );
             }
-          } catch (e) {
-            Log.error('Error generating blurhash for ${mediaFile.mediaId}: $e');
           }
         }
-      } catch (e) {
-        Log.error(
-          'Error in background processing of ${mediaFile.mediaId}: $e',
-        );
-      }
+      }, 'Error in background processing of ${mediaFile.mediaId}');
+      if (!completed) return;
     }
   }
 

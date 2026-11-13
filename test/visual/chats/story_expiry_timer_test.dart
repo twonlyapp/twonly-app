@@ -28,6 +28,22 @@ class _RecordedTimer implements Timer {
 }
 
 void main() {
+  test('a custom deadline controls expiry independently of posting order', () {
+    late _RecordedTimer scheduled;
+    final posted = DateTime(2026, 11, 12, 12);
+    StoryExpiryTimer(
+        timerFactory: (duration, callback) =>
+            scheduled = _RecordedTimer(duration, callback),
+      )
+      ..schedule(
+        postedAt: posted,
+        expiresAt: posted.add(const Duration(days: 7)),
+        now: posted.add(const Duration(days: 2)),
+        onExpired: () {},
+      )
+      ..cancel();
+    expect(scheduled.duration, const Duration(days: 5));
+  });
   test('an open story expires exactly at its lifetime boundary', () {
     late _RecordedTimer scheduled;
     var expired = false;

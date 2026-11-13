@@ -43,7 +43,7 @@ pub async fn delete_story_item(media_id: String) -> Result<()> {
     stories::delete_item(ctx, &media_id).await
 }
 
-/// Lets go of every story item older than 24 hours.
+/// Lets go of every expired story item.
 pub async fn purge_expired_stories() -> Result<()> {
     let ctx = Context::get_static()?;
 

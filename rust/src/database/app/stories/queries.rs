@@ -42,6 +42,8 @@ pub async fn received(
                 AND m.created_at > ?
                 AND c.accepted = 1
                 AND c.blocked = 0
+                AND c.deleted_by_user = 0
+                AND c.account_deleted = 0
                 AND (f.download_state IS NULL
                     OR f.download_state != 'reuploadRequested'
             )
@@ -86,6 +88,7 @@ pub async fn own(connection: &mut SqliteConnection, cutoff: i64) -> Result<OwnSt
         r#"
             SELECT m.media_id AS "media_id!",
                 MIN(m.created_at) AS "posted_at!",
+                m.additional_message_data AS "additional_message_data?",
                 COUNT(*) AS "recipient_count!",
                 SUM(CASE
                 WHEN m.opened_at IS NULL THEN 0

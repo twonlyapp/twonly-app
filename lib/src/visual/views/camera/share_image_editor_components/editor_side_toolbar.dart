@@ -21,6 +21,9 @@ class EditorSideToolbar extends StatelessWidget {
     required this.onEditDisplayTime,
     required this.onToggleAudio,
     required this.onToggleRequiresAuth,
+    required this.includeLocation,
+    required this.loadingLocation,
+    required this.onToggleLocation,
     required this.canTrim,
     required this.trimmerVisible,
     required this.onToggleTrimmer,
@@ -43,6 +46,9 @@ class EditorSideToolbar extends StatelessWidget {
   final VoidCallback onEditDisplayTime;
   final VoidCallback onToggleAudio;
   final VoidCallback onToggleRequiresAuth;
+  final bool includeLocation;
+  final bool loadingLocation;
+  final VoidCallback onToggleLocation;
 
   /// Whether the clip is far enough along for the cutter to be openable at all;
   /// it needs a player that knows how long the recording is.
@@ -139,6 +145,23 @@ class EditorSideToolbar extends StatelessWidget {
           ),
         ],
         if (!sendToWidget) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            loadingLocation
+                ? Icons.location_searching_rounded
+                : includeLocation
+                ? Icons.location_on_rounded
+                : Icons.location_on_outlined,
+            key: const Key('includeMediaLocation'),
+            tooltipText: loadingLocation
+                ? context.lang.locationFilterSearching
+                : context.lang.includeMediaLocation,
+            color: includeLocation
+                ? Theme.of(context).colorScheme.primary
+                : context.appColor(AppColor.mediaForeground),
+            disable: loadingLocation,
+            onPressed: onToggleLocation,
+          ),
           const SizedBox(height: 8),
           NotificationBadgeComp(
             count: _displayTimeLabel,

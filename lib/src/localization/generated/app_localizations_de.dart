@@ -348,6 +348,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get includeMediaLocation => 'Standort hinzufügen';
+
+  @override
   String get locationFilterTitle => 'Standortfilter';
 
   @override
@@ -1591,6 +1594,45 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userGotReported => 'Benutzer wurde gemeldet.';
+
+  @override
+  String get chatDeletionPresetHour => '1 Stunde';
+
+  @override
+  String get chatDeletionPresetDay => '1 Tag';
+
+  @override
+  String get chatDeletionPresetWeek => '1 Woche';
+
+  @override
+  String get chatDeletionPresetMonth => '1 Monat';
+
+  @override
+  String get chatDeletionPresetYear => '1 Jahr';
+
+  @override
+  String get chatDeletionCustomChoice => 'Eigene';
+
+  @override
+  String get customChatDeletionTimer => 'Eigener Timer';
+
+  @override
+  String get chatDeletionDuration => 'Dauer';
+
+  @override
+  String get chatDeletionUnitHours => 'Stunden';
+
+  @override
+  String get chatDeletionUnitDays => 'Tage';
+
+  @override
+  String get chatDeletionUnitWeeks => 'Wochen';
+
+  @override
+  String get chatDeletionUnitMonths => 'Monate';
+
+  @override
+  String get chatDeletionDurationInvalid => 'Ungültige Dauer.';
 
   @override
   String get deleteChatAfter => 'Chat löschen nach...';
@@ -4073,6 +4115,59 @@ class AppLocalizationsDe extends AppLocalizations {
       locale: localeName,
       other: '$count hinzugefügt',
       one: '1 hinzugefügt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storyAdd => 'Story';
+
+  @override
+  String get storyPost => 'Story posten';
+
+  @override
+  String get storyAvailableFor => 'Verfügbar für';
+
+  @override
+  String get story24Hours => '24 Stunden';
+
+  @override
+  String storyDays(int count) {
+    return '$count Tage';
+  }
+
+  @override
+  String get storyUntil => 'Bis…';
+
+  @override
+  String storyAvailableUntil(String deadline) {
+    return 'Verfügbar bis $deadline';
+  }
+
+  @override
+  String get storyChooseNewDeadline =>
+      'Wähle einen Zeitpunkt innerhalb der nächsten 30 Tage.';
+
+  @override
+  String get storyIncludedOnMap => 'Auf der Story-Karte sichtbar';
+
+  @override
+  String get storyMapTitle => 'Story-Karte';
+
+  @override
+  String get storyMapNoLocations =>
+      'Storys mit geteiltem Standort erscheinen hier, bis sie ablaufen.';
+
+  @override
+  String get storyMapNoResults => 'Keine Storys in diesem Bereich.';
+
+  @override
+  String storyMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Storys in diesem Bereich',
+      one: '1 Story in diesem Bereich',
     );
     return '$_temp0';
   }

@@ -54,9 +54,13 @@ class StoryPreview extends StatelessWidget {
     );
     Widget picture = Image.file(
       source,
-      // A file that appears later, once downloaded, is drawn then.
+      // A story row can appear before preparation creates its image. Retry a
+      // failed file read when preparation or downloading advances; rebuilding
+      // with the same Image key/provider would otherwise keep the placeholder.
       key: ValueKey(
-        '${mediaFile.mediaId}/${mediaFile.downloadState}/${mediaFile.hasThumbnail}',
+        '${mediaFile.mediaId}/${mediaFile.uploadStateName}/'
+        '${mediaFile.downloadStateName}/${mediaFile.hasThumbnail}/'
+        '${mediaFile.sizeInBytes}',
       ),
       width: width,
       height: height,

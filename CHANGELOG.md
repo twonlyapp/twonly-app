@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.2
+
+- New: Story maps and a longer viewing timer
+- Improve: Redesigned chat deletion timer menu with custom durations
+
 ## 0.8.1
 
 - New: 15-minute message checks on Android without Google services

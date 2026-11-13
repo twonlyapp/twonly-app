@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT created_at, additional_message_data FROM messages WHERE message_id = ? AND is_story = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "created_at",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "additional_message_data",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "63a2413693a45d0d9707fba53aa0748921804bcb4371ab3c85988756c1be9804"
+}

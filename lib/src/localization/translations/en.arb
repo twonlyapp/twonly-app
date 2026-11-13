@@ -132,6 +132,7 @@
       }
     }
   },
+  "includeMediaLocation": "Include location",
   "locationFilterTitle": "Location filter",
   "locationFilterSubtitle": "Adds a camera filter with a map of where you are. Your location is sent only with media you send using this filter.",
   "locationFilterSearching": "Finding your location…",
@@ -565,6 +566,19 @@
   "changeDisplayMaxTime": "Chats will now be deleted after {time} ({username}).",
   "youChangedDisplayMaxTime": "Chats will now be deleted after {time}.",
   "userGotReported": "User has been reported.",
+  "chatDeletionPresetHour": "1 hour",
+  "chatDeletionPresetDay": "1 day",
+  "chatDeletionPresetWeek": "1 week",
+  "chatDeletionPresetMonth": "1 month",
+  "chatDeletionPresetYear": "1 year",
+  "chatDeletionCustomChoice": "Custom",
+  "customChatDeletionTimer": "Custom timer",
+  "chatDeletionDuration": "Duration",
+  "chatDeletionUnitHours": "Hours",
+  "chatDeletionUnitDays": "Days",
+  "chatDeletionUnitWeeks": "Weeks",
+  "chatDeletionUnitMonths": "Months",
+  "chatDeletionDurationInvalid": "Invalid duration.",
   "deleteChatAfter": "Delete chat after...",
   "deleteChatAfterAnHour": "one hour.",
   "deleteChatAfterADay": "one day.",
@@ -1693,6 +1707,40 @@
   },
   "memoryImportProgressAdded": "{count, plural, =1{1 added} other{{count} added}}",
   "@memoryImportProgressAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storyAdd": "Story",
+  "storyPost": "Post story",
+  "storyAvailableFor": "Available for",
+  "story24Hours": "24 hours",
+  "storyDays": "{count} days",
+  "storyUntil": "Until…",
+  "storyAvailableUntil": "Available until {deadline}",
+  "storyChooseNewDeadline": "Choose a future deadline within the next 30 days.",
+  "storyIncludedOnMap": "Included on Story map",
+  "storyMapTitle": "Story map",
+  "storyMapNoLocations": "Stories with a shared location appear here until they expire.",
+  "storyMapNoResults": "No stories in this area.",
+  "storyMapVisibleCount": "{count, plural, =1{1 story in this area} other{{count} stories in this area}}",
+  "@storyDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@storyAvailableUntil": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "@storyMapVisibleCount": {
     "placeholders": {
       "count": {
         "type": "int"

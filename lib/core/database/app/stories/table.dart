@@ -33,12 +33,14 @@ class OwnStories {
 class OwnStorySummary {
   final String mediaId;
   final PlatformInt64 postedAt;
+  final Uint8List? additionalMessageData;
   final PlatformInt64 recipientCount;
   final PlatformInt64 viewerCount;
 
   const OwnStorySummary({
     required this.mediaId,
     required this.postedAt,
+    this.additionalMessageData,
     required this.recipientCount,
     required this.viewerCount,
   });
@@ -47,6 +49,7 @@ class OwnStorySummary {
   int get hashCode =>
       mediaId.hashCode ^
       postedAt.hashCode ^
+      additionalMessageData.hashCode ^
       recipientCount.hashCode ^
       viewerCount.hashCode;
 
@@ -57,6 +60,7 @@ class OwnStorySummary {
           runtimeType == other.runtimeType &&
           mediaId == other.mediaId &&
           postedAt == other.postedAt &&
+          additionalMessageData == other.additionalMessageData &&
           recipientCount == other.recipientCount &&
           viewerCount == other.viewerCount;
 }

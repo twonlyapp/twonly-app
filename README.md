@@ -5,11 +5,15 @@
 <a href="https://twonly.eu" rel="some text"><img src="metadata/en-US/images/featureGraphic.png" alt="twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing." /></a>
 
 <p align="center">
-  <img src="metadata/en-US/images/phoneScreenshots/01_chat_list.png" width="19%" alt="Share moments" />
-  <img src="metadata/en-US/images/phoneScreenshots/02_share_image.png" width="19%" alt="Chat list" />
-  <img src="metadata/en-US/images/phoneScreenshots/03_group_stickers.png" width="19%" alt="Groups" />
-  <img src="metadata/en-US/images/phoneScreenshots/04_games.png" width="19%" alt="Groups" />
-  <img src="metadata/en-US/images/phoneScreenshots/05_memories.png" width="19%" alt="Groups" />
+  <img src="metadata/en-US/images/phoneScreenshots/01_chat_list.png" height="400" alt="Chat list" />
+  <img src="metadata/en-US/images/phoneScreenshots/02_share_image.png" height="400" alt="Share moments" />
+  <img src="metadata/en-US/images/phoneScreenshots/07_story_map.png" height="400" alt="Friends’ stories on a map" />
+</p>
+
+<p align="center">
+  <img src="metadata/en-US/images/phoneScreenshots/03_group_stickers.png" height="400" alt="Group chats and stickers" />
+  <img src="metadata/en-US/images/phoneScreenshots/04_games.png" height="400" alt="Games in chats" />
+  <img src="metadata/en-US/images/phoneScreenshots/05_memories.png" height="400" alt="Saved Memories" />
 </p>
 
 <div align="center" style="margin: 10px 20px 10px 20px">
@@ -32,6 +36,7 @@
 - Text and voice messages in one-on-one and group chats
 - Live location sharing in chats
 - Stories that expire after 24 hours
+- Story map showing where friends shared their moments
 - Custom stickers and mini-games in chats
 - Send photos directly to friends' home screen widgets
 - Memories with a map and end-to-end encrypted cloud backups

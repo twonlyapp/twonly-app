@@ -7,13 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
-import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -124,6 +125,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _requiresAuthBeforeWidget = false;
   bool _selectingSticker = false;
   bool _creatingSticker = false;
+  FilterLocation? _sharedLocation;
+  bool _loadingLocation = false;
 
   bool get _showWidgetExplainer =>
       _widgetRecipientAvailable &&
@@ -598,6 +601,34 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<ScreenshotImageHelper?> storeImageAsOriginal() =>
       mediaWriter.storeImageAsOriginal(pixelRatio);
 
+  Future<void> _toggleLocation() async {
+    if (_loadingLocation) return;
+    if (_sharedLocation != null) {
+      setState(() => _sharedLocation = null);
+      return;
+    }
+    setState(() => _loadingLocation = true);
+    FilterLocation? location;
+    try {
+      if (await LocationMetadataService.requestPrecisePermission()) {
+        final filter = layerStack.all.whereType<FilterLayerData>().firstOrNull;
+        location = filter?.location ?? await RustApi.sharePhotoLocation();
+      }
+    } on Object catch (error) {
+      Log.warn('Could not include media location: $error');
+    }
+    if (!mounted) return;
+    setState(() {
+      _sharedLocation = location;
+      _loadingLocation = false;
+    });
+    if (location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.locationFilterUnavailable)),
+      );
+    }
+  }
+
   AdditionalMessageData? getAdditionalData() {
     final link = widget.previewLink?.url.toString();
     final location = _photoLocation();
@@ -611,33 +642,38 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
   }
 
-  /// Coordinates leave the device only when the location filter is the
-  /// selected filter and its map is on screen.
+  /// Either the visible filter or the explicit pin action shares coordinates.
+  /// A pin without the filter keeps the media free of an overlay.
   PhotoLocationData? _photoLocation() {
     final filter = layerStack.all.whereType<FilterLayerData>().firstOrNull;
-    final location = filter?.location;
-    if (filter == null || !filter.locationSelected || location == null) {
-      return null;
-    }
-    final rect = screenshotController.relativeRect(filter.locationCardKey);
-    if (rect == null) return null;
+    final showFilter = filter?.locationSelected ?? false;
+    final location = showFilter
+        ? filter?.location ?? _sharedLocation
+        : _sharedLocation;
+    if (location == null) return null;
+    final rect = showFilter
+        ? screenshotController.relativeRect(filter!.locationCardKey)
+        : null;
     return PhotoLocationData(
       latitude: location.latitude,
       longitude: location.longitude,
       accuracy: location.accuracy,
       fixTimestampMs: Int64(location.fixTimestampMs),
-      mapLeft: rect.left,
-      mapTop: rect.top,
-      mapWidth: rect.width,
-      mapHeight: rect.height,
-      mapLatitude: filter.locationCamera?.target.latitude,
-      mapLongitude: filter.locationCamera?.target.longitude,
-      mapZoom: filter.locationCamera?.zoom,
+      mapLeft: rect?.left,
+      mapTop: rect?.top,
+      mapWidth: rect?.width,
+      mapHeight: rect?.height,
+      mapLatitude: filter?.locationCamera?.target.latitude,
+      mapLongitude: filter?.locationCamera?.target.longitude,
+      mapZoom: filter?.locationCamera?.zoom,
+      hideFilter: rect == null,
     );
   }
 
   Future<void> pushShareImageView() async {
-    if (sendingOrLoadingImage || _imageLoadFailed) return;
+    if (sendingOrLoadingImage || _loadingLocation || _imageLoadFailed) return;
+    // Measure the visible filter before the writer hides it for capture.
+    final metadata = getAdditionalData();
     final mediaStoreFuture = storeImageAsOriginal();
 
     await videoController?.pause();
@@ -650,7 +686,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           updateSelectedGroupIds: updateSelectedGroupIds,
           mediaStoreFuture: mediaStoreFuture,
           mediaFileService: mediaService,
-          additionalData: getAdditionalData(),
+          additionalData: metadata,
           sendToWidget: _sendToWidget,
           storyTarget: storyTarget,
         ),
@@ -665,7 +701,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> sendImageToSinglePerson() async {
-    if (sendingOrLoadingImage) return;
+    if (sendingOrLoadingImage || _loadingLocation) return;
     setState(() {
       sendingOrLoadingImage = true;
     });
@@ -674,6 +710,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     widget.mainCameraController?.onImageSend();
 
+    final metadata = getAdditionalData();
     // must be awaited so the widget for the screenshot is not already disposed when sending..
     await storeImageAsOriginal();
 
@@ -681,7 +718,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     await RustApi.sendMediaToGroups(
       mediaId: mediaService.mediaFile.mediaId,
       groupIds: [widget.sendToGroup!.groupId],
-      additionalMessageData: getAdditionalData()?.writeToBuffer(),
+      additionalMessageData: metadata?.writeToBuffer(),
       widgetOnly: _sendToWidget,
     );
 
@@ -777,7 +814,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     mediaService: mediaService,
                     sendToGroup: widget.sendToGroup,
                     isLoadingImage: loadingImage,
-                    isSending: sendingOrLoadingImage || _updatingWidgetMode,
+                    isSending:
+                        sendingOrLoadingImage ||
+                        _updatingWidgetMode ||
+                        _loadingLocation,
                     storeImageAsOriginal: storeImageAsOriginal,
                     onAddMoreRecipients: pushShareImageView,
                     onSend: () async {
@@ -861,6 +901,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       onEditDisplayTime: _editDisplayTime,
                       onToggleAudio: _toggleAudio,
                       onToggleRequiresAuth: _toggleRequiresAuth,
+                      includeLocation: _sharedLocation != null,
+                      loadingLocation: _loadingLocation,
+                      onToggleLocation: _toggleLocation,
                       sendToWidget: _sendToWidget,
                       showWidgetOption: _widgetRecipientAvailable,
                       highlightWidgetOption: _showWidgetExplainer,

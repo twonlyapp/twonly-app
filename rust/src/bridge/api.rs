@@ -367,6 +367,21 @@ impl RustApi {
             }))
     }
 
+    /// A location fix explicitly requested for sharing with this media. This
+    /// does not enable the camera's location filter or Memory geotagging.
+    pub async fn share_photo_location() -> Result<Option<FilterLocation>> {
+        Ok(crate::services::location_metadata::share_photo_location()
+            .await?
+            .map(|(captured_at, fix)| FilterLocation {
+                latitude: fix.latitude,
+                longitude: fix.longitude,
+                accuracy: fix.accuracy,
+                fix_timestamp_ms: captured_at
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |elapsed| elapsed.as_millis() as i64),
+            }))
+    }
+
     /// Creates one outgoing message per selected group, plus the story rows
     /// for `story_audience`, and starts the upload they all share.
     pub async fn send_media_to_groups(

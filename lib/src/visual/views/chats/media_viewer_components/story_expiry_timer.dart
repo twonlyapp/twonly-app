@@ -19,9 +19,12 @@ class StoryExpiryTimer {
     required DateTime postedAt,
     required DateTime now,
     required void Function() onExpired,
+    DateTime? expiresAt,
   }) {
     cancel();
-    final remaining = postedAt.add(storyLifetime).difference(now);
+    final remaining = (expiresAt ?? postedAt.add(storyLifetime)).difference(
+      now,
+    );
     _timer = _timerFactory(
       remaining.isNegative ? Duration.zero : remaining,
       onExpired,

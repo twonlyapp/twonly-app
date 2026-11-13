@@ -46,6 +46,36 @@ void main() {
     );
   });
 
+  test('hidden filters retain coordinates but do not draw an overlay', () {
+    final bytes = _encode(_location()..hideFilter = true);
+    final metadata = AdditionalMessageData.fromBuffer(bytes);
+    expect(metadata.photoLocation.hideFilter, isTrue);
+    expect(metadata.photoLocation.latitude, 52.52);
+    expect(PhotoLocationOverlay.decode(bytes), isNull);
+  });
+
+  test('absent and explicit false hide flags keep the filter visible', () {
+    for (final hideFilter in [null, false]) {
+      final location = _location();
+      if (hideFilter != null) location.hideFilter = hideFilter;
+      final bytes = _encode(location);
+      final decoded = AdditionalMessageData.fromBuffer(bytes).photoLocation;
+      expect(decoded.hasHideFilter(), hideFilter != null);
+      expect(decoded.hideFilter, isFalse);
+      expect(PhotoLocationOverlay.decode(bytes), isNotNull);
+    }
+  });
+
+  test('opening from the story map suppresses even a visible filter', () {
+    final bytes = _encode(_location());
+    expect(PhotoLocationOverlay.decode(bytes), isNotNull);
+    expect(PhotoLocationOverlay.decode(bytes, fromMap: true), isNull);
+    expect(
+      AdditionalMessageData.fromBuffer(bytes).photoLocation.hideFilter,
+      isFalse,
+    );
+  });
+
   test(
     'round-trips the edited viewport and scales it for the receiving card',
     () {

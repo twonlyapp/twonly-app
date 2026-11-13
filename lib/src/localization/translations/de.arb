@@ -136,6 +136,7 @@
       }
     }
   },
+  "includeMediaLocation": "Standort hinzufügen",
   "locationFilterTitle": "Standortfilter",
   "locationFilterSubtitle": "Fügt einen Kamerafilter mit einer Karte deines Standorts hinzu. Dein Standort wird nur mit Medien gesendet, die du mit diesem Filter verschickst.",
   "locationFilterSearching": "Standort wird gesucht…",
@@ -541,6 +542,19 @@
   "changeDisplayMaxTime": "Chats werden ab jetzt nach {time} gelöscht ({username}).",
   "youChangedDisplayMaxTime": "Chats werden ab jetzt nach {time} gelöscht.",
   "userGotReported": "Benutzer wurde gemeldet.",
+  "chatDeletionPresetHour": "1 Stunde",
+  "chatDeletionPresetDay": "1 Tag",
+  "chatDeletionPresetWeek": "1 Woche",
+  "chatDeletionPresetMonth": "1 Monat",
+  "chatDeletionPresetYear": "1 Jahr",
+  "chatDeletionCustomChoice": "Eigene",
+  "customChatDeletionTimer": "Eigener Timer",
+  "chatDeletionDuration": "Dauer",
+  "chatDeletionUnitHours": "Stunden",
+  "chatDeletionUnitDays": "Tage",
+  "chatDeletionUnitWeeks": "Wochen",
+  "chatDeletionUnitMonths": "Monate",
+  "chatDeletionDurationInvalid": "Ungültige Dauer.",
   "deleteChatAfter": "Chat löschen nach...",
   "deleteChatAfterAnHour": "einer Stunde.",
   "deleteChatAfterADay": "einem Tag.",
@@ -1488,5 +1502,39 @@
   "memoryImporterDelete": "Löschen",
   "memoryImportProgressTitle": "Erinnerungen werden importiert",
   "memoryImportProgressCount": "{done} von {total}",
-  "memoryImportProgressAdded": "{count, plural, =1{1 hinzugefügt} other{{count} hinzugefügt}}"
+  "memoryImportProgressAdded": "{count, plural, =1{1 hinzugefügt} other{{count} hinzugefügt}}",
+  "storyAdd": "Story",
+  "storyPost": "Story posten",
+  "storyAvailableFor": "Verfügbar für",
+  "story24Hours": "24 Stunden",
+  "storyDays": "{count} Tage",
+  "storyUntil": "Bis…",
+  "storyAvailableUntil": "Verfügbar bis {deadline}",
+  "storyChooseNewDeadline": "Wähle einen Zeitpunkt innerhalb der nächsten 30 Tage.",
+  "storyIncludedOnMap": "Auf der Story-Karte sichtbar",
+  "storyMapTitle": "Story-Karte",
+  "storyMapNoLocations": "Storys mit geteiltem Standort erscheinen hier, bis sie ablaufen.",
+  "storyMapNoResults": "Keine Storys in diesem Bereich.",
+  "storyMapVisibleCount": "{count, plural, =1{1 Story in diesem Bereich} other{{count} Storys in diesem Bereich}}",
+  "@storyDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@storyAvailableUntil": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "@storyMapVisibleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

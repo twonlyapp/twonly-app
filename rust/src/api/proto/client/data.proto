@@ -37,6 +37,10 @@ message AdditionalMessageData {
     optional LiveLocationData live_location = 12;
     optional VacationData vacation = 13;
     optional PhotoLocationData photo_location = 14;
+    // Absolute story deadline, in Unix milliseconds. Absent on legacy stories
+    // (24 hours). This travels inside the encrypted media message and is stored
+    // with its metadata, so backup/restore preserves the deadline as well.
+    optional int64 story_expires_at_ms = 15;
 }
 
 // The location filter: where the media was taken, and the rectangle the
@@ -57,6 +61,9 @@ message PhotoLocationData {
     optional double map_latitude = 9;
     optional double map_longitude = 10;
     optional double map_zoom = 11;
+    // Include the coordinates for story maps without displaying a filter.
+    // Absent or false keeps the filter visible, including in older messages.
+    optional bool hide_filter = 12;
 }
 
 // "On Vacation": the sender's streak with the receiver is frozen from

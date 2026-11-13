@@ -7,6 +7,7 @@ import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
@@ -201,5 +202,29 @@ void main() {
       expect(tapped, same(item));
       await tester.pumpWidget(const SizedBox());
     });
+  });
+
+  testWidgets('the map remains the first bubble even without unseen stories', (
+    tester,
+  ) async {
+    var opened = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: StoryBubbleStrip(
+            items: const [],
+            onTap: (_) {},
+            onMapTap: () => opened = true,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Story map'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('story-map-bubble')));
+    expect(opened, isTrue);
+    await tester.pumpWidget(const SizedBox());
   });
 }

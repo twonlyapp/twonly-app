@@ -3,7 +3,7 @@
 
 Requires Pillow: python3 -m pip install Pillow
 Run from any directory: python3 scripts/generate_feature_graphics.py
-Uses the bundled Open Sans font in scripts/fonts (license alongside it).
+Uses Open Sans in docs/screenshots/fixtures/fonts (license alongside it).
 
 The original Android captures are preferred when available. Otherwise the app
 panels are extracted from metadata's existing store screenshots. The original
@@ -46,7 +46,7 @@ def px(value):
 
 def font(size, style="Regular"):
     """Render with the requested Open Sans weight on every platform."""
-    face = ImageFont.truetype(str(ROOT / "scripts/fonts/OpenSans.ttf"), px(size))
+    face = ImageFont.truetype(str(ROOT / "docs/screenshots/fixtures/fonts/OpenSans.ttf"), px(size))
     face.set_variation_by_name(style)
     return face
 

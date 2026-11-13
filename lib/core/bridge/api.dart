@@ -970,6 +970,11 @@ class RustApi {
       .api
       .crateBridgeApiRustApiSetNetworkAvailable(available: available);
 
+  /// A location fix explicitly requested for sharing with this media. This
+  /// does not enable the camera's location filter or Memory geotagging.
+  static Future<FilterLocation?> sharePhotoLocation() =>
+      RustLib.instance.api.crateBridgeApiRustApiSharePhotoLocation();
+
   static Future<void> storeMedia({required String mediaId}) =>
       RustLib.instance.api.crateBridgeApiRustApiStoreMedia(mediaId: mediaId);
 

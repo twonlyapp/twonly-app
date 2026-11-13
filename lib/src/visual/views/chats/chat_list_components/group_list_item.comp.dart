@@ -12,14 +12,14 @@ import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
 import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
 import 'package:twonly/core/database/app/contact_groups/table.dart';
 import 'package:twonly/core/database/app/contacts/table.dart';
-import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
-import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
@@ -180,7 +180,7 @@ class _UserListItem extends State<GroupListItemComp> {
       _storyItemsStream =
           (() {
             final cutoff =
-                clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+                clock.now().subtract(maxStoryLifetime).millisecondsSinceEpoch ~/
                 1000;
             return watchRustDatabase(
               (control) => rust_stories
@@ -459,13 +459,16 @@ class _UserListItem extends State<GroupListItemComp> {
   /// Redraws the row when its oldest story item runs out, so the preview
   /// does not outlive the story.
   void _scheduleStoryExpiry() {
-    final oldest = _activeStoryItems.firstOrNull;
+    final active = _activeStoryItems
+      ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    final oldest = active.firstOrNull;
     if (oldest == null) {
       _storyExpiry.cancel();
       return;
     }
     _storyExpiry.schedule(
       postedAt: oldest.postedAt,
+      expiresAt: oldest.expiresAt,
       now: clock.now(),
       onExpired: () {
         if (!mounted) return;

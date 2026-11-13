@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 
 class MemoriesMapGallery extends StatelessWidget {
@@ -9,6 +13,7 @@ class MemoriesMapGallery extends StatelessWidget {
     required this.items,
     required this.onTap,
     required this.isLoading,
+    this.stories = false,
     super.key,
   });
 
@@ -16,6 +21,7 @@ class MemoriesMapGallery extends StatelessWidget {
   final List<MemoryItem> items;
   final void Function(int index) onTap;
   final bool isLoading;
+  final bool stories;
 
   static const initialSize = 0.36;
 
@@ -30,7 +36,7 @@ class MemoriesMapGallery extends StatelessWidget {
     shouldCloseOnMinExtent: false,
     builder: (context, scrollController) => Material(
       color: context.color.surfaceContainer,
-      elevation: 8,
+      elevation: stories ? 0 : 8,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       clipBehavior: Clip.antiAlias,
       child: CustomScrollView(
@@ -51,7 +57,9 @@ class MemoriesMapGallery extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: Text(
-                    context.lang.memoriesMapVisibleCount(items.length),
+                    stories
+                        ? context.lang.storyMapVisibleCount(items.length)
+                        : context.lang.memoriesMapVisibleCount(items.length),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -70,7 +78,9 @@ class MemoriesMapGallery extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 child: Center(
                   child: Text(
-                    context.lang.memoriesMapNoResults,
+                    stories
+                        ? context.lang.storyMapNoResults
+                        : context.lang.memoriesMapNoResults,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -89,12 +99,16 @@ class MemoriesMapGallery extends StatelessWidget {
                   childAspectRatio: 9 / 16,
                 ),
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => MemoriesThumbnailComp(
-                    key: ValueKey(items[index].mediaService.mediaFile.mediaId),
-                    galleryItem: items[index],
-                    index: index,
-                    onTap: () => onTap(index),
-                  ),
+                  (context, index) => stories
+                      ? _storyTile(context, index)
+                      : MemoriesThumbnailComp(
+                          key: ValueKey(
+                            items[index].mediaService.mediaFile.mediaId,
+                          ),
+                          galleryItem: items[index],
+                          index: index,
+                          onTap: () => onTap(index),
+                        ),
                   childCount: items.length,
                 ),
               ),
@@ -103,4 +117,55 @@ class MemoriesMapGallery extends StatelessWidget {
       ),
     ),
   );
+
+  Widget _storyTile(BuildContext context, int index) {
+    final item = items[index];
+    final message = item.messages.first;
+    final date = DateFormat.MMMd(
+      Localizations.localeOf(context).toString(),
+    ).add_Hm().format(message.createdAt);
+    return Semantics(
+      button: true,
+      label: date,
+      child: GestureDetector(
+        key: ValueKey(message.messageId),
+        onTap: () => onTap(index),
+        child: LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            fit: StackFit.expand,
+            children: [
+              StoryPreview(
+                mediaFile: item.mediaService.mediaFile,
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                radius: 0,
+              ),
+              Positioned(
+                top: 4,
+                left: 4,
+                child: SizedBox.square(
+                  dimension: 26,
+                  child: AvatarIcon(contactId: message.senderId, fontSize: 13),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  color: const Color(0x99000000),
+                  child: Text(
+                    date,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
