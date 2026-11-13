@@ -28,6 +28,8 @@ import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
+import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
 import 'package:twonly/src/visual/components/mailbox_sync.comp.dart';
 import 'package:twonly/src/visual/components/memory_import_progress.comp.dart';
@@ -194,6 +196,7 @@ class _AppMainWidgetState extends State<AppMainWidget>
   bool _isTwonlyLocked = true;
   int _initializationAttempt = 0;
   bool _initializationDeferred = false;
+  bool _preparingRegistration = false;
   late int _initialPage;
 
   StreamSubscription<Uri>? _deepLinkSub;
@@ -343,7 +346,12 @@ class _AppMainWidgetState extends State<AppMainWidget>
       // still gets onboarding, and the error shows when they try to register.
       _proofOfWork = _prefetchProofOfWork();
 
-      if (onboardingState.openBackupRecovery) {
+      if (onboardingState.openRegistration) {
+        await KeyValueStore.delete(KeyValueKeys.onboardingState);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _isCurrentAttempt(attempt)) _openRegistration();
+        });
+      } else if (onboardingState.openBackupRecovery) {
         await KeyValueStore.update<OnboardingState>(
           key: KeyValueKeys.onboardingState,
           update: (state) => state.openBackupRecovery = false,
@@ -360,6 +368,43 @@ class _AppMainWidgetState extends State<AppMainWidget>
         });
       }
     }
+  }
+
+  Future<void> _prepareRegistration() async {
+    if (_preparingRegistration) return;
+    setState(() => _preparingRegistration = true);
+    try {
+      await prepareNewAccountRegistration(
+        notificationTitle: 'twonly',
+        notificationBody: context.lang.registeringNewAccount,
+      );
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not prepare registration',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      setState(() => _preparingRegistration = false);
+      await showAlertDialog(context, 'Error', error.toString());
+    }
+  }
+
+  void _openRegistration() {
+    context.navPush(
+      Stack(
+        children: [
+          RegisterView(
+            callbackOnSuccess: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              initAsync();
+            },
+            proofOfWork: _proofOfWork,
+          ),
+          const AppOutdatedComp(),
+        ],
+      ),
+    );
   }
 
   static Future<PrefetchedProofOfWork> _prefetchProofOfWork() async {
@@ -471,21 +516,7 @@ class _AppMainWidgetState extends State<AppMainWidget>
       }
     } else {
       child = OnboardingView(
-        onRegister: () => context.navPush(
-          Stack(
-            children: [
-              RegisterView(
-                callbackOnSuccess: () {
-                  // Back to this widget, which now shows the setup pages.
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  initAsync();
-                },
-                proofOfWork: _proofOfWork,
-              ),
-              const AppOutdatedComp(),
-            ],
-          ),
-        ),
+        onRegister: _prepareRegistration,
       );
     }
 
@@ -493,6 +524,10 @@ class _AppMainWidgetState extends State<AppMainWidget>
       children: [
         child,
         const AppOutdatedComp(),
+        if (_preparingRegistration) ...[
+          const ModalBarrier(dismissible: false, color: Colors.black26),
+          const Center(child: CircularProgressIndicator.adaptive()),
+        ],
       ],
     );
   }

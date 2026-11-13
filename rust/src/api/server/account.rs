@@ -13,10 +13,16 @@ use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use std::sync::Arc;
 
+mod registration;
+
 impl Server {
     pub async fn register(
         ctx: &Arc<Context>, username: String, proof_of_work: i64, lang_code: String, is_ios: bool,
     ) -> Result<ServerResult<i64>> {
+        let _registration = ctx.registration.lock().await;
+
+        registration::ensure_clean(ctx).await?;
+
         let mut key_manager = ctx.key_manager.lock().await;
 
         if key_manager.signal_identity.is_none() {

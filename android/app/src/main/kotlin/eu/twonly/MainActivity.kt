@@ -126,6 +126,43 @@ class MainActivity : FlutterFragmentActivity() {
 
         Keyring.initializeNdkContext(applicationContext)
 
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "eu.twonly/account_reset"
+        ).setMethodCallHandler { call, result ->
+            if (call.method != "clearPlatformData") {
+                result.notImplemented()
+            } else {
+                try {
+                    // Rust has already stopped native owners and removed its
+                    // credentials. Include preferences from the old Flutter
+                    // secure-storage backend and other account-specific SDKs.
+                    val preferences = java.io.File(applicationInfo.dataDir, "shared_prefs")
+                    preferences.listFiles()?.filter { it.extension == "xml" }?.forEach { file ->
+                        check(getSharedPreferences(file.nameWithoutExtension, Context.MODE_PRIVATE)
+                            .edit().clear().commit()) { "Could not clear local preferences" }
+                    }
+                    for (name in listOf("databases", "no_backup", "app_webview")) {
+                        val directory = java.io.File(applicationInfo.dataDir, name)
+                        check(!directory.exists() || directory.deleteRecursively()) {
+                            "Could not clear local account files"
+                        }
+                    }
+                    for (directory in listOfNotNull(getExternalFilesDir(null), externalCacheDir)) {
+                        check(!directory.exists() || directory.deleteRecursively()) {
+                            "Could not clear external account files"
+                        }
+                    }
+                    val notifications = getSystemService(Context.NOTIFICATION_SERVICE)
+                        as android.app.NotificationManager
+                    notifications.cancelAll()
+                    result.success(null)
+                } catch (error: Exception) {
+                    result.error("account_reset_failed", error.message, null)
+                }
+            }
+        }
+
 
         detachNotificationChannel?.invoke()
         detachNotificationChannel = NotificationTapChannel.configure(flutterEngine, applicationContext)

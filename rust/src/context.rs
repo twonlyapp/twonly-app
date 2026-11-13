@@ -48,6 +48,7 @@ pub struct Context {
     /// here so they survive that native call returning.
     foreground_runtime: StdOnceLock<tokio::runtime::Handle>,
     pub(crate) database_lifecycle: Mutex<()>,
+    pub(crate) registration: Mutex<()>,
     pub(crate) foreground: crate::database::lifecycle::foreground::Foreground,
     suspended: AtomicBool,
     native_databases: AtomicBool,
@@ -198,6 +199,7 @@ impl Context {
             parked_message_retry: Default::default(),
             contact_metadata_refresh: Default::default(),
             media_preprocessing: Mutex::new(()),
+            registration: Mutex::new(()),
             media_retransmission: Mutex::new(()),
             webxdc_visibility: Default::default(),
         });
@@ -468,6 +470,7 @@ impl Context {
                         parked_message_retry: Default::default(),
                         contact_metadata_refresh: Default::default(),
                         media_preprocessing: Mutex::new(()),
+                        registration: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
                     });
@@ -539,6 +542,7 @@ impl Context {
                         parked_message_retry: Default::default(),
                         contact_metadata_refresh: Default::default(),
                         media_preprocessing: Mutex::new(()),
+                        registration: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
                     });

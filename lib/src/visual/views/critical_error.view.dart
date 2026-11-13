@@ -49,14 +49,10 @@ class _CriticalErrorViewState extends State<CriticalErrorView> {
 
     setState(() => _isResetting = true);
     try {
-      await deleteLocalUserData(removeCredentials: true);
-      if (!mounted) return;
-      final restarted = await Restart.restartApp(
+      await prepareNewAccountRegistration(
         notificationTitle: 'twonly',
         notificationBody: context.lang.registeringNewAccount,
-        forceKill: true,
       );
-      if (!restarted) throw StateError('Could not restart twonly');
     } catch (error, stackTrace) {
       Log.error(
         'Could not reset local account data',

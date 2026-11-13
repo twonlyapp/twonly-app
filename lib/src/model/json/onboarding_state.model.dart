@@ -47,6 +47,7 @@ class OnboardingState {
     this.encryptionKey,
     this.emailRecoveryRequested = false,
     this.openBackupRecovery = false,
+    this.openRegistration = false,
   });
 
   factory OnboardingState.fromJson(Map<String, dynamic> json) =>
@@ -64,6 +65,10 @@ class OnboardingState {
   /// Set by the critical error view after it reset the local data, so the
   /// next start opens the backup recovery directly. Cleared on use.
   bool openBackupRecovery;
+
+  /// Written only after account data was cleared. The next process opens the
+  /// registration form with fresh native handles and credentials.
+  bool openRegistration;
 
   List<ReceivedRecoveryShare> receivedShares = [];
 

@@ -54,6 +54,7 @@ OnboardingState _$OnboardingStateFromJson(Map<String, dynamic> json) =>
         emailRecoveryRequested:
             json['emailRecoveryRequested'] as bool? ?? false,
         openBackupRecovery: json['openBackupRecovery'] as bool? ?? false,
+        openRegistration: json['openRegistration'] as bool? ?? false,
       )
       ..receivedShares = (json['receivedShares'] as List<dynamic>)
           .map((e) => ReceivedRecoveryShare.fromJson(e as Map<String, dynamic>))
@@ -77,6 +78,7 @@ Map<String, dynamic> _$OnboardingStateToJson(OnboardingState instance) =>
       'encryptionKey': instance.encryptionKey,
       'emailRecoveryRequested': instance.emailRecoveryRequested,
       'openBackupRecovery': instance.openBackupRecovery,
+      'openRegistration': instance.openRegistration,
       'receivedShares': instance.receivedShares,
       'ignoredMessageIds': instance.ignoredMessageIds,
       'recoveryStartedAt': instance.recoveryStartedAt?.toIso8601String(),

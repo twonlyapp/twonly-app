@@ -110,7 +110,11 @@ impl RustKeyManager {
 
         crate::keys::KeyManager::remove_from_keychain(&storage)?;
 
-        storage.delete("api_auth_token")?;
+        storage.clear()?;
+
+        // FlutterSecureStorage used a separate service before Rust owned keys.
+        #[cfg(target_os = "ios")]
+        crate::secure_storage::SecureStorage::new("flutter_secure_storage_service").clear()?;
 
         Ok(())
     }

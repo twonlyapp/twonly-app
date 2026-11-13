@@ -142,6 +142,29 @@ impl SecureStorage {
         }
     }
 
+    /// Remove every entry in this application's namespace, including secrets
+    /// written by older versions which are no longer individually named here.
+    pub(crate) fn clear(&self) -> Result<(), String> {
+        #[cfg(target_os = "android")]
+        let service = format!("^{}$", self.service_name.replace('.', "\\."));
+        #[cfg(not(target_os = "android"))]
+        let service = self.service_name.clone();
+
+        let spec = std::collections::HashMap::from([("service", service.as_str())]);
+        let entries = match Entry::search(&spec) {
+            Ok(entries) => entries,
+            Err(KeyringError::NoEntry) => return Ok(()),
+            Err(error) => return Err(format!("Could not enumerate account secrets: {error}")),
+        };
+        for entry in entries {
+            match entry.delete_credential() {
+                Ok(()) | Err(KeyringError::NoEntry) => {}
+                Err(error) => return Err(format!("Could not remove account secret: {error}")),
+            }
+        }
+        Ok(())
+    }
+
     /// Helper to create a keyring entry with the appropriate platform
     /// modifiers.
     fn get_entry(&self, key: &str) -> Result<Entry, String> {
@@ -169,6 +192,33 @@ impl SecureStorage {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn clearing_account_secrets_includes_unknown_old_keys_and_preserves_other_services() {
+        SecureStorage::init().unwrap();
+        let storage = SecureStorage::new(&uuid::Uuid::new_v4().to_string());
+        let other = SecureStorage::new(&uuid::Uuid::new_v4().to_string());
+        for key in [
+            "twonly_key_manager",
+            "api_auth_token",
+            "obsolete-account-secret",
+        ] {
+            storage.write(key, "old account").unwrap();
+        }
+        other.write("unrelated", "keep").unwrap();
+
+        storage.clear().unwrap();
+        storage.clear().unwrap();
+
+        for key in [
+            "twonly_key_manager",
+            "api_auth_token",
+            "obsolete-account-secret",
+        ] {
+            assert!(storage.read(key).unwrap().is_none());
+        }
+        assert_eq!(other.read("unrelated").unwrap().as_deref(), Some("keep"));
+    }
 
     #[test]
 

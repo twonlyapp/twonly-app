@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.3
+
+- Fix: Ensure new account registrations start with a clean state
+
 ## 0.8.2
 
 - New: Story maps and a longer viewing timer

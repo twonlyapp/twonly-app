@@ -53,13 +53,20 @@ class _RecoveryViewState extends State<RecoveryView> {
   }
 
   Future<void> _registerNewAccount() async {
-    await deleteLocalUserData(removeCredentials: true);
-    if (!mounted) return;
-    await Restart.restartApp(
-      notificationTitle: 'twonly',
-      notificationBody: context.lang.registeringNewAccount,
-      forceKill: true,
-    );
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await prepareNewAccountRegistration(
+        notificationTitle: 'twonly',
+        notificationBody: context.lang.registeringNewAccount,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
   }
 
   @override

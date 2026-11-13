@@ -6,6 +6,7 @@ import Foundation
 import UIKit
 import UserNotifications
 import WidgetKit
+import WebKit
 import flutter_sharing_intent
 
 @main
@@ -57,6 +58,7 @@ import flutter_sharing_intent
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     RuntimeStorageChannel.register(with: engineBridge.pluginRegistry)
+    AccountResetChannel.register(with: engineBridge.pluginRegistry)
     NativeNotificationChannel.register(with: engineBridge.pluginRegistry)
     WebxdcHostChannel.register(with: engineBridge.pluginRegistry)
     NativeLocationPermission.register(with: engineBridge.pluginRegistry)
@@ -264,6 +266,52 @@ enum NativeAudioSessionChannel {
         result(
           FlutterError(
             code: "audio_session", message: error.localizedDescription, details: nil))
+      }
+    }
+  }
+}
+
+/// Clears account state outside the Dart runtime's directories after Rust has
+/// stopped database owners and removed account credentials.
+class AccountResetChannel {
+  static func register(with registry: FlutterPluginRegistry) {
+    guard let registrar = registry.registrar(forPlugin: "TwonlyAccountReset") else { return }
+    let channel = FlutterMethodChannel(
+      name: "eu.twonly/account_reset", binaryMessenger: registrar.messenger())
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "clearPlatformData" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      do {
+        if let domain = Bundle.main.bundleIdentifier {
+          UserDefaults.standard.removePersistentDomain(forName: domain)
+        }
+        let runtimeGroup = "group.eu.twonly.runtime"
+        UserDefaults(suiteName: runtimeGroup)?.removePersistentDomain(forName: runtimeGroup)
+        let group = "group.eu.twonly.shareIntent"
+        UserDefaults(suiteName: group)?.removePersistentDomain(forName: group)
+        guard let directory = FileManager.default.containerURL(
+          forSecurityApplicationGroupIdentifier: group) else {
+          throw NSError(domain: "TwonlyAccountReset", code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "The shared files could not be cleared"])
+        }
+        for file in try FileManager.default.contentsOfDirectory(
+          at: directory, includingPropertiesForKeys: nil) {
+          // iOS owns the container's Library directory. Our share extension
+          // writes its pending attachments directly into the container root.
+          if file.lastPathComponent != "Library" {
+            try FileManager.default.removeItem(at: file)
+          }
+        }
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        WKWebsiteDataStore.default().removeData(
+          ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast
+        ) { result(nil) }
+      } catch {
+        result(FlutterError(code: "account_reset_failed",
+          message: error.localizedDescription, details: nil))
       }
     }
   }
