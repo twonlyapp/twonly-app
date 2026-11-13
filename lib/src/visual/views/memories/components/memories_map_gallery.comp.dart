@@ -157,6 +157,7 @@ class MemoriesMapGallery extends StatelessWidget {
                   color: const Color(0x99000000),
                   child: Text(
                     date,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white, fontSize: 10),
                   ),
                 ),

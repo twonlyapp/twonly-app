@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
@@ -24,7 +25,9 @@ List<StoryItem> locatedStories(Iterable<StoryItem> stories, DateTime now) =>
       ..sort((a, b) => b.postedAt.compareTo(a.postedAt));
 
 class StoriesMapView extends StatefulWidget {
-  const StoriesMapView({super.key});
+  const StoriesMapView({this.initialCameraPosition, super.key});
+
+  final CameraPosition? initialCameraPosition;
 
   @override
   State<StoriesMapView> createState() => _StoriesMapViewState();
@@ -106,5 +109,6 @@ class _StoriesMapViewState extends State<StoriesMapView> {
   Widget build(BuildContext context) => MemoriesMapView.stories(
     storyItems: _items.stream,
     onOpenStories: _openStories,
+    initialCameraPosition: widget.initialCameraPosition,
   );
 }

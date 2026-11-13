@@ -7,7 +7,7 @@ Reads the real iPhone captures and captions from the screenshot workflow.
 Writes Header, Search, iPhone 6.1/6.3-inch and iPad 12.9/13-inch assets to
 docs/screenshots/output/app-store/<language>/. iPad exports use the same iPhone
 captures, fitted proportionally onto a larger canvas. All exports are RGB PNGs.
-Open Sans is bundled with its license in scripts/fonts/.
+Open Sans is bundled with its license in docs/screenshots/fixtures/fonts/.
 """
 
 import argparse
@@ -26,7 +26,7 @@ DEVICES = {
     "ipad-13": (2064, 2752),
 }
 CREATIVES = {"header": (3840, 1646), "search": (3840, 2560)}
-FONT = ROOT / "scripts/fonts/OpenSans.ttf"
+FONT = ROOT / "docs/screenshots/fixtures/fonts/OpenSans.ttf"
 LOCALES = {copy["language"]: locale for locale, copy in COPY.items()}
 
 
@@ -76,6 +76,9 @@ def screenshot(shot, caption, size):
     canvas = Image.new("RGB", size, GREEN)
     draw = ImageDraw.Draw(canvas)
     title = font(width * 0.052, "ExtraBold")
+    if caption.get("title_single_line"):
+        while draw.textlength(caption["title"], font=title) > width * 0.86 and title.size > 1:
+            title = font(title.size - 1, "ExtraBold")
     subtitle = font(width * 0.034)
     y = height * 0.052
     for value, face, spacing in ((caption["title"], title, 1.25),
@@ -197,7 +200,7 @@ def write_guide(output):
     for device, (width, height) in DEVICES.items():
         lines.append(f"| {device} screenshots | `{device}/` | {width} × {height} |")
     lines.extend([
-        "", "Each device folder contains all six screenshots. All upload images are opaque",
+        "", "Each device folder contains all configured screenshots. All upload images are opaque",
         "RGB PNGs. The iPad versions reuse the real iPhone captures and preserve their",
         "aspect ratios. Existing 6.9-inch screenshots remain directly in each language folder.",
         "", "Contact sheets for review are in `previews/`; these are not upload assets.",
@@ -224,19 +227,28 @@ def main():
         source_dir = args.raw_dir / language
         if not source_dir.is_dir():
             continue
-        captures = {name: load_capture(source_dir / f"{name}.png") for name in captions}
+        captures = {
+            name: load_capture(source_dir / f"{name}.png") for name in captions
+            if (source_dir / f"{name}.png").is_file()
+            and (source_dir / f"{name}.json").is_file()
+        }
+        if not captures:
+            continue
         target = args.output / language
-        for placement, size in CREATIVES.items():
+        creatives = CREATIVES if {"01_chat_list", "02_share_image"} <= captures.keys() else {}
+        for placement, size in creatives.items():
             image = creative(COPY[locale], captures, size)
             exports.append(save(image, target / f"{placement}.png"))
             print(f"{language}: {placement} at {size[0]} x {size[1]}", flush=True)
         for device, size in DEVICES.items():
             images = []
             for name, localized in captions.items():
+                if name not in captures:
+                    continue
                 image = screenshot(captures[name], localized[language], size)
                 exports.append(save(image, target / device / f"{name}.png"))
                 images.append(image)
-            overview(images, list(captions), args.output / "previews" / f"{device}-{language}.png")
+            overview(images, list(captures), args.output / "previews" / f"{device}-{language}.png")
             print(f"{language}: {len(images)} {device} screenshots at {size[0]} x {size[1]}",
                   flush=True)
     if not exports:

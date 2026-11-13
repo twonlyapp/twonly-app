@@ -47,7 +47,7 @@ class EditorBottomBar extends StatelessWidget {
             child: SaveToGalleryButton(
               storeImageAsOriginal: storeImageAsOriginal,
               mediaService: mediaService,
-              displayButtonLabel: false,
+              displayButtonLabel: !hasFixedReceiver,
               isLoading: isLoadingImage,
             ),
           ),

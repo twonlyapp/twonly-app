@@ -34,12 +34,14 @@ class MemoriesMapView extends StatefulWidget {
     this.initialMedia,
     super.key,
   }) : storyItems = null,
+       initialCameraPosition = null,
        onOpenStories = null;
 
   /// Stories share the Memories map's camera, viewport filtering and gallery.
   const MemoriesMapView.stories({
     required Stream<List<MemoryItem>> this.storyItems,
     required Future<void> Function(List<MemoryItem>, int) this.onOpenStories,
+    this.initialCameraPosition,
     super.key,
   }) : favoritesOnly = false,
        initialMedia = null;
@@ -48,6 +50,7 @@ class MemoriesMapView extends StatefulWidget {
   final MediaFile? initialMedia;
   final Stream<List<MemoryItem>>? storyItems;
   final Future<void> Function(List<MemoryItem>, int)? onOpenStories;
+  final CameraPosition? initialCameraPosition;
   bool get isStories => storyItems != null;
 
   @override
@@ -958,14 +961,17 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
             final initialPoint = initialMedia == null
                 ? null
                 : _point(initialMedia);
-            _initialCamera ??= initialPoint != null && initialPoint.isValid
-                ? CameraPosition(target: initialPoint.coordinates, zoom: 14)
-                : mostPopulatedMemoryCamera(
-                    _points,
-                    countries: _countries,
-                    width: size.width,
-                    height: size.height * (1 - MemoriesMapGallery.initialSize),
-                  );
+            _initialCamera ??=
+                widget.initialCameraPosition ??
+                (initialPoint != null && initialPoint.isValid
+                    ? CameraPosition(target: initialPoint.coordinates, zoom: 14)
+                    : mostPopulatedMemoryCamera(
+                        _points,
+                        countries: _countries,
+                        width: size.width,
+                        height:
+                            size.height * (1 - MemoriesMapGallery.initialSize),
+                      ));
             return Stack(
               children: [
                 Positioned.fill(
