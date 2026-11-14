@@ -198,9 +198,10 @@ class WebxdcPlatformView: NSObject, FlutterPlatformView {
       WKUserScript(
         source: WebxdcPlatformView.blockWebRtc, injectionTime: .atDocumentStart,
         forMainFrameOnly: false))
-    // Nothing plays without the user asking for it, and no page may take over
-    // the screen on its own.
-    configuration.mediaTypesRequiringUserActionForPlayback = .all
+    // Sound may start on opening: the user opened the app, and a game replays
+    // the last move with its sounds before anybody touches it. Video still
+    // waits for a tap, and no page may take over the screen on its own.
+    configuration.mediaTypesRequiringUserActionForPlayback = .video
     configuration.allowsInlineMediaPlayback = true
     configuration.allowsPictureInPictureMediaPlayback = false
 

@@ -152,7 +152,9 @@ class WebxdcView(
             setGeolocationEnabled(false)
             javaScriptCanOpenWindowsAutomatically = false
             setSupportMultipleWindows(false)
-            mediaPlaybackRequiresUserGesture = true
+            // Sound may start on opening: the user opened the app, and a game
+            // replays the last move with its sounds before anybody touches it.
+            mediaPlaybackRequiresUserGesture = false
             cacheMode = WebSettings.LOAD_NO_CACHE
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             builtInZoomControls = false
