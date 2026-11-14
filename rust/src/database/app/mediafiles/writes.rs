@@ -292,6 +292,47 @@ pub async fn delete(tx: &mut Transaction<'_, Sqlite>, id: &str) -> Result<()> {
     Ok(())
 }
 
+/// Deletes a memory's row, unless a message still points at it.
+///
+/// `messages.media_id` is `ON DELETE SET NULL`, and a media message without a
+/// media ID is left out of every chat query. A memory can be a chat message's
+/// media at the same time: one shared to a chat from the memories page, or one
+/// kept because a chat member saved it. Deleting such a memory made the message
+/// disappear from every chat it was sent to, reactions and all. While a message
+/// references the row, the row only stops being a memory and stays as expired
+/// media, which is what the chat shows once the files are gone. Returns whether
+/// the row was deleted.
+pub async fn delete_memory(tx: &mut Transaction<'_, Sqlite>, id: &str) -> Result<bool> {
+    let referenced = sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ?) AS "referenced!: bool""#,
+        id,
+    )
+    .fetch_one(&mut **tx)
+    .await?;
+
+    if !referenced {
+        delete(tx, id).await?;
+
+        return Ok(true);
+    }
+
+    // The callers remove the files and the cloud copy, so nothing a memory or
+    // a gallery export could still use is left behind.
+    sqlx::query!(
+        r#"
+            UPDATE media_files
+            SET stored = 0, cloud_state = 'none', has_thumbnail = 0,
+                stored_file_hash = NULL, gallery_export_pending = 0, is_favorite = 0
+            WHERE media_id = ?
+        "#,
+        id,
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(false)
+}
+
 pub async fn fill_months(
     tx: &mut Transaction<'_, Sqlite>, labels: Vec<super::table::MediaMonthLabel>,
 ) -> Result<()> {

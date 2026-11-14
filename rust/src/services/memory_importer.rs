@@ -730,7 +730,7 @@ pub async fn delete_import(ctx: &Arc<Context>, importer_id: &str) -> Result<()> 
     .await?;
     let mut tx = database.pool.begin().await?;
     for (media_id, _) in &rows {
-        crate::database::app::mediafiles::writes::delete(&mut tx, media_id).await?;
+        crate::database::app::mediafiles::writes::delete_memory(&mut tx, media_id).await?;
     }
     sqlx::query("DELETE FROM imported_memory_failures WHERE importer_id = ?")
         .bind(importer_id)

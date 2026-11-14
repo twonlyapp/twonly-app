@@ -648,3 +648,76 @@ async fn month_backfill_and_backup_cleanup_preserve_existing_data_and_rollback()
 
     assert_eq!(pending, "missing");
 }
+
+// A memory shared to two chats from the memories page, opened and saved by a
+// recipient, and then deleted completely: both chat messages used to vanish,
+// because deleting the row set their media_id to NULL.
+#[tokio::test]
+async fn deleting_a_memory_keeps_the_chat_messages_that_use_it() {
+    use crate::database::app::messages::queries as messages;
+    use crate::database::app::messages::table::{MessageFilter, MessageQuery};
+
+    let directory = tempfile::tempdir().unwrap();
+    let database = AppDatabase::new(
+        directory.path().join("app.sqlite").to_str().unwrap(),
+        None,
+        false,
+    )
+    .await
+    .unwrap();
+    database.run_migrations().await.unwrap();
+    let mut tx = database.pool.begin().await.unwrap();
+
+    for statement in [
+        "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('a', 'A', 1), ('b', 'B', 1)",
+        "INSERT INTO media_files(media_id, type, stored, cloud_state, has_thumbnail, stored_file_hash, \
+         is_favorite) VALUES ('shared', 'image', 1, 'uploaded', 1, X'01', 1), \
+         ('alone', 'image', 1, 'uploaded', 1, X'02', 0)",
+        "INSERT INTO messages(group_id, message_id, type, media_id, media_stored, opened_at, created_at) \
+         VALUES ('a', 'to-a', 'media', 'shared', 1, 1000, 1000), \
+         ('b', 'to-b', 'media', 'shared', 0, 1000, 1000)",
+    ] {
+        sqlx::query(statement).execute(&mut *tx).await.unwrap();
+    }
+
+    assert!(writes::delete_memory(&mut tx, "alone").await.unwrap());
+    assert!(queries::get(&mut tx, "alone").await.unwrap().is_none());
+
+    assert!(!writes::delete_memory(&mut tx, "shared").await.unwrap());
+    let kept = queries::get(&mut tx, "shared").await.unwrap().unwrap();
+    assert!(!kept.stored);
+    assert_eq!(kept.cloud_state, "none");
+    assert!(!kept.has_thumbnail);
+    assert_eq!(kept.stored_file_hash, None);
+    assert!(!kept.is_favorite);
+
+    // It is no memory any more, so the memories page drops it.
+    assert!(queries::list(&mut tx, &input(MediaFilter::Stored))
+        .await
+        .unwrap()
+        .is_empty());
+
+    for (group, message) in [("a", "to-a"), ("b", "to-b")] {
+        let rows = messages::list(
+            &mut tx,
+            &MessageQuery {
+                filter: MessageFilter::Page,
+                group_id: Some(group.into()),
+                ids: vec![],
+                limit: 100,
+                before: None,
+                before_message_id: None,
+                now_ms: 1_100_000,
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(
+            rows.iter()
+                .map(|row| (row.message_id.as_str(), row.media_id.as_deref()))
+                .collect::<Vec<_>>(),
+            [(message, Some("shared"))]
+        );
+    }
+}

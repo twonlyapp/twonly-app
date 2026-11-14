@@ -54,7 +54,9 @@ pub async fn update_media_files(
 pub async fn delete_media_file(id: String, transaction: &DatabaseSession) -> Result<()> {
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = writes::delete(tx.transaction(), &id).await;
+    // Only the memories page deletes media rows from Flutter. A memory that is
+    // also a chat message's media must not take that message with it.
+    let result = writes::delete_memory(tx.transaction(), &id).await.map(|_| ());
 
     tx.finish(result).await
 }

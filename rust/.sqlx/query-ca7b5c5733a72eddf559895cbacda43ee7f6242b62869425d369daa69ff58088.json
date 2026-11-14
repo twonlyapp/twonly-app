@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE media_files\n            SET stored = 0, cloud_state = 'none', has_thumbnail = 0,\n                stored_file_hash = NULL, gallery_export_pending = 0, is_favorite = 0\n            WHERE media_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ca7b5c5733a72eddf559895cbacda43ee7f6242b62869425d369daa69ff58088"
+}
